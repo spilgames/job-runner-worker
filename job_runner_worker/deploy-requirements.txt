@@ -1,0 +1,1 @@
+dwh-fabric>=0.7
