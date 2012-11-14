@@ -17,6 +17,8 @@ def publish(event_queue):
         A ``Queue`` instance for events to broadcast.
 
     """
+    logger.info('Starting event publisher')
+
     context = zmq.Context(1)
     publisher = context.socket(zmq.PUB)
     publisher.connect('tcp://{0}:{1}'.format(

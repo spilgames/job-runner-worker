@@ -32,7 +32,7 @@ def execute_run(run_queue, event_queue):
         )
         file_obj = os.fdopen(file_desc, 'w')
         os.chmod(file_path, 0700)
-        file_obj.write(run.job.script_content_rendered.replace('\r', ''))
+        file_obj.write(run.job.script_content.replace('\r', ''))
         file_obj.close()
 
         run.patch({

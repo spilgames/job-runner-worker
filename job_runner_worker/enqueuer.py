@@ -21,6 +21,8 @@ def enqueue_runs(run_queue, event_queue):
         An instance of ``Queue`` for pushing events to.
 
     """
+    logger.info('Start enqueue loop')
+
     while True:
         if not run_queue.full():
             try:

@@ -24,14 +24,11 @@ def run():
     run_queue = Queue(concurrent_jobs)
     event_queue = Queue()
 
-    logger.info('Start enqueue loop')
     greenlets.append(gevent.spawn(enqueue_runs, run_queue, event_queue))
 
-    logger.info('Starting {0} workers'.format(concurrent_jobs))
     for x in range(concurrent_jobs):
         greenlets.append(gevent.spawn(execute_run, run_queue, event_queue))
 
-    logger.info('Starting event publisher')
     greenlets.append(gevent.spawn(publish, event_queue))
 
     for greenlet in greenlets:

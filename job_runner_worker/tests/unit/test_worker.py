@@ -21,7 +21,7 @@ class ModuleTestCase(unittest.TestCase):
 
         run = Mock()
         run.id = 1234
-        run.job.script_content_rendered = (
+        run.job.script_content = (
             '#!/usr/bin/env bash\n\necho "Hello World!";\n')
 
         event_queue = Mock()

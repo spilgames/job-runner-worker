@@ -29,6 +29,13 @@ def setup_log_handler(log_level):
         The log level (uppercased ``str``).
 
     """
+    no_info = [
+        'requests.packages.urllib3.connectionpool',
+    ]
+
+    for module in no_info:
+        logging.getLogger(module).setLevel(logging.ERROR)
+
     logging.basicConfig(
         level=getattr(logging, log_level),
         format='%(levelname)s - %(asctime)s - %(name)s: %(message)s'
