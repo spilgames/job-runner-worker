@@ -21,9 +21,11 @@ private-key, etc... Example::
     run_resource_uri=/api/v1/run/
     concurrent_jobs=4
     log_level=info
+    script_temp_path=/tmp
     ws_server_hostname=websocket.server
     ws_server_port=5555
-    script_temp_path=/tmp
+    broadcaster_server_hostname=broadcaster.server
+    broadcaster_server_port=5556
 
 
 ``api_base_url``
@@ -59,6 +61,12 @@ private-key, etc... Example::
     The path where the scripts that are being executed through the Job-Runner
     are temporarily stored. Note that this should be a location where
     executable scripts are allowed!
+
+``broadcaster_server_hostname``
+    The hostname of the queue broadcaster server.
+
+``broadcaster_server_port``
+    The port of the queue broadcaster server.
 
 
 Command-line usage

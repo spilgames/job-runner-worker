@@ -1,3 +1,4 @@
+import json
 import unittest2 as unittest
 
 from mock import Mock, patch
@@ -21,31 +22,30 @@ class ModuleTestCase(unittest.TestCase):
         # just to break the never-ending loop :)
         time.sleep.side_effect = Exception('Boom!')
 
-        queue = Mock()
-        queue.full.side_effect = [False, True]
+        run_queue = Mock()
         event_queue = Mock()
+        event_queue.put.side_effect = RestError('Boom!')
+
+        zmq_context = Mock()
+        subscriber = zmq_context.socket.return_value
+        subscriber.recv_multipart.side_effect = lambda: ['foo', json.dumps({
+            'run_id': 1234,
+            'action': 'enqueue',
+        })]
 
         run = Mock()
         run.id = 1234
+        run.enqueue_dts = None
 
-        Run.get_list.return_value = [run]
+        Run.return_value = run
 
-        self.assertRaises(Exception, enqueue_runs, queue, event_queue)
-
-        Run.get_list.assert_called_once_with(
-            config.get.return_value,
-            params={
-                'limit': 1,
-                'state': 'scheduled',
-                'schedule_dts__lte': datetime.utcnow.return_value
-                    .isoformat.return_value
-            }
-        )
+        self.assertRaises(
+            Exception, enqueue_runs, zmq_context, run_queue, event_queue)
 
         run.patch.assert_called_once_with({
             'enqueue_dts': datetime.utcnow.return_value.isoformat.return_value
         })
-        queue.put.assert_called_once_with(run)
+        run_queue.put.assert_called_once_with(run)
         event_queue.put.assert_called_once_with(
             '{"event": "enqueued", "run_id": 1234}')
 
@@ -61,11 +61,18 @@ class ModuleTestCase(unittest.TestCase):
         # just to break the never-ending loop :)
         time.sleep.side_effect = Exception('Boom!')
 
-        queue = Mock()
-        queue.full.side_effect = [False, True]
+        run_queue = Mock()
         event_queue = Mock()
 
-        Run.get_list.side_effect = RestError('Bam!')
+        zmq_context = Mock()
+        subscriber = zmq_context.socket.return_value
+        subscriber.recv_multipart.side_effect = lambda: ['foo', json.dumps({
+            'run_id': 1234,
+            'action': 'enqueue',
+        })]
 
-        self.assertRaises(Exception, enqueue_runs, queue, event_queue)
+        Run.side_effect = RestError('Bam!')
+
+        self.assertRaises(
+            Exception, enqueue_runs, zmq_context, run_queue, event_queue)
         self.assertEqual(1, logger.exception.call_count)

@@ -1,6 +1,6 @@
 import unittest2 as unittest
 
-from mock import call, patch
+from mock import Mock, call, patch
 
 from job_runner_worker.events import publish
 
@@ -10,8 +10,7 @@ class ModuleTestCase(unittest.TestCase):
     Tests for :mod:`job_runner_worker.events`.
     """
     @patch('job_runner_worker.events.config')
-    @patch('job_runner_worker.events.zmq')
-    def test_publish(self, zmq, config):
+    def test_publish(self, config):
         """
         Test :func:`.websocket`.
         """
@@ -23,7 +22,7 @@ class ModuleTestCase(unittest.TestCase):
 
         config.get.side_effect = config_side_effect
 
-        context = zmq.Context.return_value
+        context = Mock()
         publisher = context.socket.return_value
 
         event_queue = [
@@ -31,7 +30,7 @@ class ModuleTestCase(unittest.TestCase):
             'bar',
         ]
 
-        publish(event_queue)
+        publish(context, event_queue)
 
         self.assertEqual([
             call(['worker.event', 'foo']),
