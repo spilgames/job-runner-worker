@@ -1,10 +1,36 @@
 import json
+import logging
 import requests
+import time
 import urlparse
 from requests.exceptions import RequestException
 
 from job_runner_worker.auth import HmacAuth
 from job_runner_worker.config import config
+
+
+logger = logging.getLogger(__name__)
+
+
+def retry_on_error(func):
+    """
+    Decorator the retry on (temporary) error while executing func.
+    """
+    def inner_func(*args, **kwargs):
+        for i in range(3):
+            try:
+                if i > 0:
+                    logger.warning('Attempt {0} to call {1}'.format(
+                        i + 1, func.__name__))
+                return func(*args, **kwargs)
+            except RestError as e:
+                logger.exception(
+                    'Exception raised while calling {0}'.format(
+                        func.__name__))
+                time.sleep(i + 1)
+        raise e
+
+    return inner_func
 
 
 class RestError(Exception):
@@ -33,6 +59,7 @@ class BaseRestModel(object):
             self._data = self._get_json_data()
         return self._data[name]
 
+    @retry_on_error
     def _get_json_data(self):
         """
         Return JSON data.
@@ -65,6 +92,7 @@ class BaseRestModel(object):
             raise RestError('Exception {0} raised with message {1}'.format(
                 e.__class__.__name__, str(e)))
 
+    @retry_on_error
     def patch(self, attributes={}):
         """
         PATCH resource with given keyword arguments.
@@ -97,6 +125,7 @@ class BaseRestModel(object):
                 e.__class__.__name__, str(e)))
 
     @classmethod
+    @retry_on_error
     def get_list(cls, resource_path, params={}):
         """
         Return a list of models for ``resource_path``.
