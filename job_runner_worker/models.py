@@ -48,8 +48,8 @@ class BaseRestModel(object):
                     self._resource_path
                 ),
                 auth=HmacAuth(
-                    config.get('job_runner_worker', 'public_api_key'),
-                    config.get('job_runner_worker', 'private_api_key')
+                    config.get('job_runner_worker', 'api_key'),
+                    config.get('job_runner_worker', 'secret')
                 ),
                 headers={'content-type': 'application/json'},
                 verify=False,
@@ -80,8 +80,8 @@ class BaseRestModel(object):
                     self._resource_path
                 ),
                 auth=HmacAuth(
-                    config.get('job_runner_worker', 'public_api_key'),
-                    config.get('job_runner_worker', 'private_api_key')
+                    config.get('job_runner_worker', 'api_key'),
+                    config.get('job_runner_worker', 'secret')
                 ),
                 headers={'content-type': 'application/json'},
                 data=json.dumps(attributes),
@@ -121,8 +121,8 @@ class BaseRestModel(object):
                     resource_path
                 ),
                 auth=HmacAuth(
-                    config.get('job_runner_worker', 'public_api_key'),
-                    config.get('job_runner_worker', 'private_api_key')
+                    config.get('job_runner_worker', 'api_key'),
+                    config.get('job_runner_worker', 'secret')
                 ),
                 params=params,
                 headers={'content-type': 'application/json'},

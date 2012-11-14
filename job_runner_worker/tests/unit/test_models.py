@@ -19,8 +19,8 @@ class BaseRestModelTestCase(unittest.TestCase):
         def config_get_side_effect(*args):
             return {
                 ('job_runner_worker', 'api_base_url'): 'http://api/',
-                ('job_runner_worker', 'private_api_key'): 'key',
-                ('job_runner_worker', 'public_api_key'): 'public',
+                ('job_runner_worker', 'secret'): 'key',
+                ('job_runner_worker', 'api_key'): 'public',
             }[args]
 
         config.get.side_effect = config_get_side_effect
@@ -48,8 +48,8 @@ class BaseRestModelTestCase(unittest.TestCase):
         def config_get_side_effect(*args):
             return {
                 ('job_runner_worker', 'api_base_url'): 'http://api/',
-                ('job_runner_worker', 'private_api_key'): 'key',
-                ('job_runner_worker', 'public_api_key'): 'public',
+                ('job_runner_worker', 'secret'): 'key',
+                ('job_runner_worker', 'api_key'): 'public',
             }[args]
 
         config.get.side_effect = config_get_side_effect
@@ -69,8 +69,8 @@ class BaseRestModelTestCase(unittest.TestCase):
         def config_get_side_effect(*args):
             return {
                 ('job_runner_worker', 'api_base_url'): 'http://api/',
-                ('job_runner_worker', 'private_api_key'): 'key',
-                ('job_runner_worker', 'public_api_key'): 'public',
+                ('job_runner_worker', 'secret'): 'key',
+                ('job_runner_worker', 'api_key'): 'public',
             }[args]
 
         config.get.side_effect = config_get_side_effect
@@ -100,8 +100,8 @@ class BaseRestModelTestCase(unittest.TestCase):
         def config_get_side_effect(*args):
             return {
                 ('job_runner_worker', 'api_base_url'): 'http://api/',
-                ('job_runner_worker', 'private_api_key'): 'key',
-                ('job_runner_worker', 'public_api_key'): 'public',
+                ('job_runner_worker', 'secret'): 'key',
+                ('job_runner_worker', 'api_key'): 'public',
             }[args]
 
         config.get.side_effect = config_get_side_effect
@@ -122,8 +122,8 @@ class BaseRestModelTestCase(unittest.TestCase):
         def config_get_side_effect(*args):
             return {
                 ('job_runner_worker', 'api_base_url'): 'http://api/',
-                ('job_runner_worker', 'private_api_key'): 'key',
-                ('job_runner_worker', 'public_api_key'): 'public',
+                ('job_runner_worker', 'secret'): 'key',
+                ('job_runner_worker', 'api_key'): 'public',
             }[args]
 
         config.get.side_effect = config_get_side_effect
@@ -154,8 +154,8 @@ class BaseRestModelTestCase(unittest.TestCase):
         def config_get_side_effect(*args):
             return {
                 ('job_runner_worker', 'api_base_url'): 'http://api/',
-                ('job_runner_worker', 'private_api_key'): 'key',
-                ('job_runner_worker', 'public_api_key'): 'public',
+                ('job_runner_worker', 'secret'): 'key',
+                ('job_runner_worker', 'api_key'): 'public',
             }[args]
 
         config.get.side_effect = config_get_side_effect

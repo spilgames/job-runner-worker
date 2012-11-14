@@ -16,9 +16,9 @@ private-key, etc... Example::
 
     [job_runner_worker]
     api_base_url=https://engportal-stg.priv.spillgroup.org/
-    private_api_key=privatekey
-    public_api_key=publickey
-    run_resource_uri=/api/job_runner/v1/run/
+    api_key=privatekey
+    secret=publickey
+    run_resource_uri=/api/v1/run/
     concurrent_jobs=4
     log_level=info
     ws_server_hostname=websocket.server
@@ -29,11 +29,11 @@ private-key, etc... Example::
 ``api_base_url``
     The base URL which will be used to access the API.
 
-``public_api_key``
-    Private-key to access the API.
-
-``public_api_key``
+``api_key``
     Public-key to access the API.
+
+``secret``
+    Private-key to access the API.
 
 ``run_resource_uri``
     The URI to the run resources.
