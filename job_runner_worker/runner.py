@@ -1,4 +1,5 @@
 import logging
+import sys
 
 import gevent
 import zmq.green as zmq
@@ -35,7 +36,11 @@ def run():
 
     greenlets.append(gevent.spawn(publish, context, event_queue))
 
-    for greenlet in greenlets:
-        greenlet.join()
+    try:
+        for greenlet in greenlets:
+            greenlet.join()
+    except KeyboardInterrupt:
+        sys.exit()
 
     context.term()
+    sys.exit('Something went wrong, all greenlets died!')

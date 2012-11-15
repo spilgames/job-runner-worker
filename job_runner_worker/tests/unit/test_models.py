@@ -25,7 +25,6 @@ class ModuleTestCase(unittest.TestCase):
 
         def func():
             exc = exceptions.pop(0)
-            print exc
             raise exc('Boom!')
 
         self.assertRaises(Exception, retry_on_requests_error(func))

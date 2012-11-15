@@ -9,6 +9,7 @@ class ModuleTestCase(unittest.TestCase):
     """
     Tests for :mod:`job_runner_worker.runner`.
     """
+    @patch('job_runner_worker.runner.sys')
     @patch('job_runner_worker.runner.zmq')
     @patch('job_runner_worker.runner.publish')
     @patch('job_runner_worker.runner.reset_incomplete_runs')
@@ -26,7 +27,8 @@ class ModuleTestCase(unittest.TestCase):
             execute_run,
             reset_incomplete_runs,
             publish,
-            zmq):
+            zmq,
+            sys):
         """
         Test :func:`.run`.
         """
@@ -58,3 +60,5 @@ class ModuleTestCase(unittest.TestCase):
                 Queue.return_value,
             )
         ], gevent.spawn.call_args_list)
+
+        sys.exit.assert_called_once()
