@@ -4,6 +4,14 @@ Welcome to Job-Runner Worker's documentation!
 Installation
 ------------
 
+Make sure all the required packages are installed:
+
+* ``python-devel``
+* ``python-virtualenv``
+* ``gcc``
+* ``gcc-c++``
+* ``libevent-devel``
+
 This package can be installed by executing
 ``pip install job-runner-worker``.
 
@@ -11,13 +19,13 @@ This package can be installed by executing
 Configuration
 -------------
 
-A configuration-file is required containing the API url, public and
-private-key, etc... Example::
+A configuration-file is required containing the API url, api_key,
+secret, etc... Example::
 
     [job_runner_worker]
     api_base_url=https://engportal-stg.priv.spillgroup.org/
-    api_key=privatekey
-    secret=publickey
+    api_key=worker1
+    secret=verysecret
     run_resource_uri=/api/v1/run/
     concurrent_jobs=4
     log_level=info
