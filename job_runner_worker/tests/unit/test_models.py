@@ -1,8 +1,35 @@
 import unittest2 as unittest
 
 from mock import Mock, patch
+from requests.exceptions import RequestException
 
-from job_runner_worker.models import BaseRestModel, RestError, Run
+from job_runner_worker.models import (
+    BaseRestModel,
+    RequestClientError,
+    RequestServerError,
+    Run,
+    retry_on_requests_error
+)
+
+
+class ModuleTestCase(unittest.TestCase):
+    """
+    Tests for :mod:`~job_runner_worker.models`.
+    """
+    @patch('job_runner_worker.models.time')
+    def test_retry_on_requests_error(self, time):
+        """
+        Test :func:`.retry_on_requests_error`.
+        """
+        exceptions = [RequestException, RequestServerError, Exception]
+
+        def func():
+            exc = exceptions.pop(0)
+            print exc
+            raise exc('Boom!')
+
+        self.assertRaises(Exception, retry_on_requests_error(func))
+        self.assertEqual(2, time.sleep.call_count)
 
 
 class BaseRestModelTestCase(unittest.TestCase):
@@ -54,10 +81,10 @@ class BaseRestModelTestCase(unittest.TestCase):
 
         config.get.side_effect = config_get_side_effect
         response = requests.patch.return_value
-        response.status_code = 500
+        response.status_code = 418
 
         base_model = BaseRestModel('/path/to/resource')
-        self.assertRaises(RestError, base_model.patch, {'foo': 'bar'})
+        self.assertRaises(RequestClientError, base_model.patch, {'foo': 'bar'})
 
     @patch('job_runner_worker.models.HmacAuth')
     @patch('job_runner_worker.models.config')
@@ -106,11 +133,11 @@ class BaseRestModelTestCase(unittest.TestCase):
 
         config.get.side_effect = config_get_side_effect
         response = requests.get.return_value
-        response.status_code = 401
+        response.status_code = 418
 
         base_model = BaseRestModel('/path/to/resource')
 
-        self.assertRaises(RestError, base_model._get_json_data)
+        self.assertRaises(RequestClientError, base_model._get_json_data)
 
     @patch('job_runner_worker.models.HmacAuth')
     @patch('job_runner_worker.models.config')
@@ -160,9 +187,10 @@ class BaseRestModelTestCase(unittest.TestCase):
 
         config.get.side_effect = config_get_side_effect
         response = requests.get.return_value
-        response.status_code = 401
+        response.status_code = 418
 
-        self.assertRaises(RestError, BaseRestModel.get_list, '/resource')
+        self.assertRaises(
+            RequestClientError, BaseRestModel.get_list, '/resource')
 
     def test___getattr__(self):
         """

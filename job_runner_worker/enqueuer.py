@@ -1,12 +1,11 @@
 import logging
 import json
-import time
 from datetime import datetime
 
 import zmq.green as zmq
 
 from job_runner_worker.config import config
-from job_runner_worker.models import RestError, Run
+from job_runner_worker.models import Run
 
 
 logger = logging.getLogger(__name__)
@@ -42,25 +41,20 @@ def enqueue_runs(zmq_context, run_queue, event_queue):
         message = json.loads(content)
 
         if message['action'] == 'enqueue':
-            try:
-                run = Run('{0}{1}/'.format(
-                    config.get('job_runner_worker', 'run_resource_uri'),
-                    message['run_id']
-                ))
-                if run.enqueue_dts:
-                    logger.warning(
-                        'Was expecting that {0} was not scheduled yet'.format(
-                            run.id))
-                else:
-                    run.patch({
-                        'enqueue_dts': datetime.utcnow().isoformat(' ')
-                    })
-                    run_queue.put(run)
-                    event_queue.put(json.dumps(
-                        {'event': 'enqueued', 'run_id': run.id}))
-            except RestError:
-                logger.exception(
-                    'An exception was raised while populating the queue')
-                time.sleep(5)
+            run = Run('{0}{1}/'.format(
+                config.get('job_runner_worker', 'run_resource_uri'),
+                message['run_id']
+            ))
+            if run.enqueue_dts:
+                logger.warning(
+                    'Was expecting that {0} was not scheduled yet'.format(
+                        run.id))
+            else:
+                run.patch({
+                    'enqueue_dts': datetime.utcnow().isoformat(' ')
+                })
+                run_queue.put(run)
+                event_queue.put(json.dumps(
+                    {'event': 'enqueued', 'run_id': run.id}))
 
     subscriber.close()

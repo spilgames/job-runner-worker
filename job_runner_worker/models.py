@@ -12,31 +12,45 @@ from job_runner_worker.config import config
 logger = logging.getLogger(__name__)
 
 
-def retry_on_error(func):
+class RequestClientError(Exception):
+    """
+    Exception raised when a RESTful request is returning an unexpected status
+    in the 2xx, 3xx or 4xx range.
+    """
+
+
+class RequestServerError(Exception):
+    """
+    Exception raised when a RESTful request is returning a 5xx error.
+    """
+
+
+def retry_on_requests_error(func):
     """
     Decorator the retry on (temporary) error while executing func.
     """
     def inner_func(*args, **kwargs):
-        for i in range(3):
+        attempt = 0
+
+        while True:
+            attempt += 1
             try:
-                if i > 0:
+                if attempt > 1:
                     logger.warning('Attempt {0} to call {1}'.format(
-                        i + 1, func.__name__))
+                        attempt, func.__name__))
                 return func(*args, **kwargs)
-            except RestError as e:
+            except (RequestException, RequestServerError):
                 logger.exception(
                     'Exception raised while calling {0}'.format(
                         func.__name__))
-                time.sleep(i + 1)
-        raise e
+                if attempt <= 10:
+                    time.sleep(2)
+                elif attempt <= 50:
+                    time.sleep(5)
+                else:
+                    time.sleep(10)
 
     return inner_func
-
-
-class RestError(Exception):
-    """
-    Exception raised when a RESTful is returning an error.
-    """
 
 
 class BaseRestModel(object):
@@ -59,73 +73,83 @@ class BaseRestModel(object):
             self._data = self._get_json_data()
         return self._data[name]
 
-    @retry_on_error
+    @retry_on_requests_error
     def _get_json_data(self):
         """
         Return JSON data.
 
         :raises:
-            :exc:`.RestError` when response code is not 200.
+            :exc:`!RequestException` on ``requests`` error.
+
+        :raises:
+            :exc:`.RequestServerError` on 5xx response.
+
+        :raises:
+            :exc:`.RequestClientError` on errors caused client-side.
 
         """
-        try:
-            response = requests.get(
-                urlparse.urljoin(
-                    config.get('job_runner_worker', 'api_base_url'),
-                    self._resource_path
-                ),
-                auth=HmacAuth(
-                    config.get('job_runner_worker', 'api_key'),
-                    config.get('job_runner_worker', 'secret')
-                ),
-                headers={'content-type': 'application/json'},
-                verify=False,
-            )
+        response = requests.get(
+            urlparse.urljoin(
+                config.get('job_runner_worker', 'api_base_url'),
+                self._resource_path
+            ),
+            auth=HmacAuth(
+                config.get('job_runner_worker', 'api_key'),
+                config.get('job_runner_worker', 'secret')
+            ),
+            headers={'content-type': 'application/json'},
+            verify=False,
+        )
 
-            if response.status_code != 200:
-                raise RestError(
-                    'GET request returned {0} - {1}'.format(
-                        response.status_code, response.content))
+        if response.status_code != 200:
+            if response.status_code >= 500 and response.status_code <= 599:
+                raise RequestServerError('Server returned {0} - {1}'.format(
+                    response.status_code, response.content))
+            else:
+                raise RequestClientError('Server returned {0} - {1}'.format(
+                    response.status_code, response.content))
 
-            return response.json
-        except RequestException as e:
-            raise RestError('Exception {0} raised with message {1}'.format(
-                e.__class__.__name__, str(e)))
+        return response.json
 
-    @retry_on_error
+    @retry_on_requests_error
     def patch(self, attributes={}):
         """
         PATCH resource with given keyword arguments.
 
         :raises:
-            :exc:`.RestError` when response code is not 202.
+            :exc:`!RequestException` on ``requests`` error.
+
+        :raises:
+            :exc:`.RequestServerError` on 5xx response.
+
+        :raises:
+            :exc:`.RequestClientError` on errors caused client-side.
 
         """
-        try:
-            response = requests.patch(
-                urlparse.urljoin(
-                    config.get('job_runner_worker', 'api_base_url'),
-                    self._resource_path
-                ),
-                auth=HmacAuth(
-                    config.get('job_runner_worker', 'api_key'),
-                    config.get('job_runner_worker', 'secret')
-                ),
-                headers={'content-type': 'application/json'},
-                data=json.dumps(attributes),
-                verify=False,
-            )
+        response = requests.patch(
+            urlparse.urljoin(
+                config.get('job_runner_worker', 'api_base_url'),
+                self._resource_path
+            ),
+            auth=HmacAuth(
+                config.get('job_runner_worker', 'api_key'),
+                config.get('job_runner_worker', 'secret')
+            ),
+            headers={'content-type': 'application/json'},
+            data=json.dumps(attributes),
+            verify=False,
+        )
 
-            if response.status_code != 202:
-                raise RestError(
-                    'PATCH request returned {0} - {1}'.format(
-                        response.status_code, response.content))
-        except RequestException as e:
-            raise RestError('Exception {0} raised with message {1}'.format(
-                e.__class__.__name__, str(e)))
+        if response.status_code != 202:
+            if response.status_code >= 500 and response.status_code <= 599:
+                raise RequestServerError('Server returned {0} - {1}'.format(
+                    response.status_code, response.content))
+            else:
+                raise RequestClientError('Server returned {0} - {1}'.format(
+                    response.status_code, response.content))
 
     @classmethod
-    @retry_on_error
+    @retry_on_requests_error
     def get_list(cls, resource_path, params={}):
         """
         Return a list of models for ``resource_path``.
@@ -143,27 +167,27 @@ class BaseRestModel(object):
             :exc:`.RestError` when response code is not 200.
 
         """
-        try:
-            response = requests.get(
-                urlparse.urljoin(
-                    config.get('job_runner_worker', 'api_base_url'),
-                    resource_path
-                ),
-                auth=HmacAuth(
-                    config.get('job_runner_worker', 'api_key'),
-                    config.get('job_runner_worker', 'secret')
-                ),
-                params=params,
-                headers={'content-type': 'application/json'},
-                verify=False,
-            )
-        except RequestException as e:
-            raise RestError('Exception {0} raised with message {1}'.format(
-                e.__class__.__name__, str(e)))
+        response = requests.get(
+            urlparse.urljoin(
+                config.get('job_runner_worker', 'api_base_url'),
+                resource_path
+            ),
+            auth=HmacAuth(
+                config.get('job_runner_worker', 'api_key'),
+                config.get('job_runner_worker', 'secret')
+            ),
+            params=params,
+            headers={'content-type': 'application/json'},
+            verify=False,
+        )
 
         if response.status_code != 200:
-            raise RestError(
-                'GET request returned {0}'.format(response.status_code))
+            if response.status_code >= 500 and response.status_code <= 599:
+                raise RequestServerError('Server returned {0} - {1}'.format(
+                    response.status_code, response.content))
+            else:
+                raise RequestClientError('Server returned {0} - {1}'.format(
+                    response.status_code, response.content))
 
         output = []
 
