@@ -1,6 +1,8 @@
 import logging
+import sys
 
 import gevent
+import zmq.green as zmq
 from gevent.queue import Queue
 
 from job_runner_worker.cleanup import reset_incomplete_runs
@@ -17,6 +19,8 @@ def run():
     """
     Start consuming runs and executing them.
     """
+    context = zmq.Context(1)
+
     greenlets = []
     reset_incomplete_runs()
     concurrent_jobs = config.getint('job_runner_worker', 'concurrent_jobs')
@@ -24,15 +28,19 @@ def run():
     run_queue = Queue(concurrent_jobs)
     event_queue = Queue()
 
-    logger.info('Start enqueue loop')
-    greenlets.append(gevent.spawn(enqueue_runs, run_queue, event_queue))
+    greenlets.append(
+        gevent.spawn(enqueue_runs, context, run_queue, event_queue))
 
-    logger.info('Starting {0} workers'.format(concurrent_jobs))
     for x in range(concurrent_jobs):
         greenlets.append(gevent.spawn(execute_run, run_queue, event_queue))
 
-    logger.info('Starting event publisher')
-    greenlets.append(gevent.spawn(publish, event_queue))
+    greenlets.append(gevent.spawn(publish, context, event_queue))
 
-    for greenlet in greenlets:
-        greenlet.join()
+    try:
+        for greenlet in greenlets:
+            greenlet.join()
+    except KeyboardInterrupt:
+        sys.exit()
+
+    context.term()
+    sys.exit('Something went wrong, all greenlets died!')

@@ -8,9 +8,9 @@ class HmacAuth(AuthBase):
     """
     Custom authentication for HMAC.
     """
-    def __init__(self, public_key, private_key):
-        self.public_key = public_key
-        self.private_key = private_key
+    def __init__(self, api_key, secret):
+        self.api_key = api_key
+        self.secret = secret
 
     def __call__(self, r):
         hmac_message = '{method}{full_path}{body}'.format(
@@ -18,9 +18,9 @@ class HmacAuth(AuthBase):
             full_path=r.path_url,
             body=r.data or '',
         )
-        hmac_key = hmac.new(self.private_key, hmac_message, hashlib.sha1)
+        hmac_key = hmac.new(self.secret, hmac_message, hashlib.sha1)
 
         r.headers['Authorization'] = 'ApiKey {0}:{1}'.format(
-            self.public_key, hmac_key.hexdigest())
+            self.api_key, hmac_key.hexdigest())
 
         return r

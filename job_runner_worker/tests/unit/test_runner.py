@@ -9,6 +9,8 @@ class ModuleTestCase(unittest.TestCase):
     """
     Tests for :mod:`job_runner_worker.runner`.
     """
+    @patch('job_runner_worker.runner.sys')
+    @patch('job_runner_worker.runner.zmq')
     @patch('job_runner_worker.runner.publish')
     @patch('job_runner_worker.runner.reset_incomplete_runs')
     @patch('job_runner_worker.runner.execute_run')
@@ -24,7 +26,9 @@ class ModuleTestCase(unittest.TestCase):
             enqueue_runs,
             execute_run,
             reset_incomplete_runs,
-            publish):
+            publish,
+            zmq,
+            sys):
         """
         Test :func:`.run`.
         """
@@ -40,13 +44,21 @@ class ModuleTestCase(unittest.TestCase):
         reset_incomplete_runs.assert_called_once_with()
 
         self.assertEqual([
-            call(enqueue_runs, Queue.return_value, Queue.return_value),
+            call(
+                enqueue_runs,
+                zmq.Context.return_value,
+                Queue.return_value,
+                Queue.return_value,
+            ),
             call(execute_run, Queue.return_value, Queue.return_value),
             call(execute_run, Queue.return_value, Queue.return_value),
             call(execute_run, Queue.return_value, Queue.return_value),
             call(execute_run, Queue.return_value, Queue.return_value),
             call(
                 publish,
+                zmq.Context.return_value,
                 Queue.return_value,
             )
         ], gevent.spawn.call_args_list)
+
+        sys.exit.assert_called_once()

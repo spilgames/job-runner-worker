@@ -4,6 +4,14 @@ Welcome to Job-Runner Worker's documentation!
 Installation
 ------------
 
+Make sure all the required packages are installed:
+
+* ``python-devel``
+* ``python-virtualenv``
+* ``gcc``
+* ``gcc-c++``
+* ``libevent-devel``
+
 This package can be installed by executing
 ``pip install job-runner-worker``.
 
@@ -11,29 +19,31 @@ This package can be installed by executing
 Configuration
 -------------
 
-A configuration-file is required containing the API url, public and
-private-key, etc... Example::
+A configuration-file is required containing the API url, api_key,
+secret, etc... Example::
 
     [job_runner_worker]
     api_base_url=https://engportal-stg.priv.spillgroup.org/
-    private_api_key=privatekey
-    public_api_key=publickey
-    run_resource_uri=/api/job_runner/v1/run/
+    api_key=worker1
+    secret=verysecret
+    run_resource_uri=/api/v1/run/
     concurrent_jobs=4
     log_level=info
+    script_temp_path=/tmp
     ws_server_hostname=websocket.server
     ws_server_port=5555
-    script_temp_path=/tmp
+    broadcaster_server_hostname=broadcaster.server
+    broadcaster_server_port=5556
 
 
 ``api_base_url``
     The base URL which will be used to access the API.
 
-``public_api_key``
-    Private-key to access the API.
-
-``public_api_key``
+``api_key``
     Public-key to access the API.
+
+``secret``
+    Private-key to access the API.
 
 ``run_resource_uri``
     The URI to the run resources.
@@ -59,6 +69,12 @@ private-key, etc... Example::
     The path where the scripts that are being executed through the Job-Runner
     are temporarily stored. Note that this should be a location where
     executable scripts are allowed!
+
+``broadcaster_server_hostname``
+    The hostname of the queue broadcaster server.
+
+``broadcaster_server_port``
+    The port of the queue broadcaster server.
 
 
 Command-line usage
