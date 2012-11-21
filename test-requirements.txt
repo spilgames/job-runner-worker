@@ -1,6 +1,3 @@
-# Documentation
-sphinx
-
 # Testing
 coverage
 mock
