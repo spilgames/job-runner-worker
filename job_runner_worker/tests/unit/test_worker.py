@@ -22,7 +22,7 @@ class ModuleTestCase(unittest.TestCase):
         run = Mock()
         run.id = 1234
         run.job.script_content = (
-            '#!/usr/bin/env bash\n\necho "Hello World!";\n')
+            u'#!/usr/bin/env bash\n\necho "H\xe9llo World!";\n')
 
         event_queue = Mock()
 
@@ -34,7 +34,7 @@ class ModuleTestCase(unittest.TestCase):
             call({'start_dts': dts}),
             call({
                 'return_dts': dts,
-                'return_log': 'Hello World!\n',
+                'return_log': u'H\xe9llo World!\n'.encode('utf-8'),
                 'return_success': True,
             })
         ], run.patch.call_args_list)

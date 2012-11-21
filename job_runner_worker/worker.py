@@ -1,3 +1,4 @@
+import codecs
 import json
 import logging
 import os
@@ -30,7 +31,11 @@ def execute_run(run_queue, event_queue):
         file_desc, file_path = tempfile.mkstemp(
             dir=config.get('job_runner_worker', 'script_temp_path')
         )
-        file_obj = os.fdopen(file_desc, 'w')
+        # seems there isn't support to open file descriptors directly in
+        # utf-8 encoding
+        os.fdopen(file_desc).close()
+
+        file_obj = codecs.open(file_path, 'w', 'utf-8')
         os.chmod(file_path, 0700)
         file_obj.write(run.job.script_content.replace('\r', ''))
         file_obj.close()
