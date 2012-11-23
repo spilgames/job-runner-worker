@@ -11,8 +11,8 @@ class ModuleTestCase(unittest.TestCase):
     """
     Tests for :mod:`job_runner_worker.enqueuer`.
     """
-    @patch('job_runner_worker.enqueuer.datetime')
     @patch('job_runner_worker.enqueuer.config')
+    @patch('job_runner_worker.enqueuer.datetime')
     @patch('job_runner_worker.enqueuer.Run')
     def test_enqueue_runs(self, Run, config, datetime):
         """

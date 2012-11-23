@@ -12,8 +12,8 @@ class ModuleTestCase(unittest.TestCase):
     Tests for :mod:`job_runner_worker.worker`.
     """
     @patch('job_runner_worker.worker.subprocess', subprocess)
-    @patch('job_runner_worker.worker.datetime')
     @patch('job_runner_worker.worker.config')
+    @patch('job_runner_worker.worker.datetime')
     def test_execute_run(self, config, datetime):
         """
         Test :func:`.execute_run`.

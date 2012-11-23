@@ -5,7 +5,6 @@ import os
 import tempfile
 from datetime import datetime
 
-
 import gevent_subprocess as subprocess
 from pytz import utc
 
