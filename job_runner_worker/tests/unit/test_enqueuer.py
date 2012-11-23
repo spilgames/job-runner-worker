@@ -2,6 +2,7 @@ import json
 import unittest2 as unittest
 
 from mock import Mock, patch
+from pytz import utc
 
 from job_runner_worker.enqueuer import enqueue_runs
 
@@ -13,7 +14,7 @@ class ModuleTestCase(unittest.TestCase):
     @patch('job_runner_worker.enqueuer.config')
     @patch('job_runner_worker.enqueuer.datetime')
     @patch('job_runner_worker.enqueuer.Run')
-    def test_enqueue_runs(self, Run, datetime, config):
+    def test_enqueue_runs(self, Run, config, datetime):
         """
         Test :func:`.enqueue_runs`.
         """
@@ -38,8 +39,9 @@ class ModuleTestCase(unittest.TestCase):
             Exception, enqueue_runs, zmq_context, run_queue, event_queue)
 
         run.patch.assert_called_once_with({
-            'enqueue_dts': datetime.utcnow.return_value.isoformat.return_value
+            'enqueue_dts': datetime.now.return_value.isoformat.return_value
         })
         run_queue.put.assert_called_once_with(run)
         event_queue.put.assert_called_once_with(
             '{"event": "enqueued", "run_id": 1234}')
+        datetime.now.assert_called_with(utc)

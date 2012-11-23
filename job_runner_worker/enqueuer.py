@@ -3,6 +3,7 @@ import json
 from datetime import datetime
 
 import zmq.green as zmq
+from pytz import utc
 
 from job_runner_worker.config import config
 from job_runner_worker.models import Run
@@ -51,7 +52,7 @@ def enqueue_runs(zmq_context, run_queue, event_queue):
                         run.id))
             else:
                 run.patch({
-                    'enqueue_dts': datetime.utcnow().isoformat(' ')
+                    'enqueue_dts': datetime.now(utc).isoformat(' ')
                 })
                 run_queue.put(run)
                 event_queue.put(json.dumps(
