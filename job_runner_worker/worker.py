@@ -3,11 +3,13 @@ import json
 import logging
 import os
 import tempfile
+from datetime import datetime
+
 
 import gevent_subprocess as subprocess
+from pytz import utc
 
 from job_runner_worker.config import config
-from job_runner_worker.timezone import get_tz_aware_now
 
 
 logger = logging.getLogger(__name__)
@@ -41,7 +43,7 @@ def execute_run(run_queue, event_queue):
         file_obj.close()
 
         run.patch({
-            'start_dts': get_tz_aware_now().isoformat(' ')
+            'start_dts': datetime.now(utc).isoformat(' ')
         })
         event_queue.put(json.dumps({'event': 'started', 'run_id': run.id}))
 
@@ -52,7 +54,7 @@ def execute_run(run_queue, event_queue):
         logger.info('Run {0} ended'.format(run.resource_uri))
 
         run.patch({
-            'return_dts': get_tz_aware_now().isoformat(' '),
+            'return_dts': datetime.now(utc).isoformat(' '),
             'return_log': '{0}{1}'.format(out, err),
             'return_success': False if sub_proc.returncode else True,
         })

@@ -2,6 +2,7 @@ import subprocess
 import unittest2 as unittest
 
 from mock import Mock, call, patch
+from pytz import utc
 
 from job_runner_worker.worker import execute_run
 
@@ -11,9 +12,9 @@ class ModuleTestCase(unittest.TestCase):
     Tests for :mod:`job_runner_worker.worker`.
     """
     @patch('job_runner_worker.worker.subprocess', subprocess)
-    @patch('job_runner_worker.worker.get_tz_aware_now')
+    @patch('job_runner_worker.worker.datetime')
     @patch('job_runner_worker.worker.config')
-    def test_execute_run(self, config, get_tz_aware_now):
+    def test_execute_run(self, config, datetime):
         """
         Test :func:`.execute_run`.
         """
@@ -28,7 +29,7 @@ class ModuleTestCase(unittest.TestCase):
 
         execute_run([run], event_queue)
 
-        dts = get_tz_aware_now.return_value.isoformat.return_value
+        dts = datetime.now.return_value.isoformat.return_value
 
         self.assertEqual([
             call({'start_dts': dts}),
@@ -42,3 +43,4 @@ class ModuleTestCase(unittest.TestCase):
             call('{"event": "started", "run_id": 1234}'),
             call('{"event": "returned", "run_id": 1234}'),
         ], event_queue.put.call_args_list)
+        datetime.now.assert_called_with(utc)
