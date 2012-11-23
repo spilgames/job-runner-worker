@@ -11,9 +11,9 @@ class ModuleTestCase(unittest.TestCase):
     Tests for :mod:`job_runner_worker.worker`.
     """
     @patch('job_runner_worker.worker.subprocess', subprocess)
+    @patch('job_runner_worker.worker.get_tz_aware_now')
     @patch('job_runner_worker.worker.config')
-    @patch('job_runner_worker.worker.datetime')
-    def test_execute_run(self, datetime, config):
+    def test_execute_run(self, config, get_tz_aware_now):
         """
         Test :func:`.execute_run`.
         """
@@ -28,7 +28,7 @@ class ModuleTestCase(unittest.TestCase):
 
         execute_run([run], event_queue)
 
-        dts = datetime.utcnow.return_value.isoformat.return_value
+        dts = get_tz_aware_now.return_value.isoformat.return_value
 
         self.assertEqual([
             call({'start_dts': dts}),

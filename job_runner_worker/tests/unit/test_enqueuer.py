@@ -10,10 +10,10 @@ class ModuleTestCase(unittest.TestCase):
     """
     Tests for :mod:`job_runner_worker.enqueuer`.
     """
+    @patch('job_runner_worker.enqueuer.get_tz_aware_now')
     @patch('job_runner_worker.enqueuer.config')
-    @patch('job_runner_worker.enqueuer.datetime')
     @patch('job_runner_worker.enqueuer.Run')
-    def test_enqueue_runs(self, Run, datetime, config):
+    def test_enqueue_runs(self, Run, config, get_tz_aware_now):
         """
         Test :func:`.enqueue_runs`.
         """
@@ -38,7 +38,7 @@ class ModuleTestCase(unittest.TestCase):
             Exception, enqueue_runs, zmq_context, run_queue, event_queue)
 
         run.patch.assert_called_once_with({
-            'enqueue_dts': datetime.utcnow.return_value.isoformat.return_value
+            'enqueue_dts': get_tz_aware_now.return_value.isoformat.return_value
         })
         run_queue.put.assert_called_once_with(run)
         event_queue.put.assert_called_once_with(

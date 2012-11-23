@@ -22,6 +22,7 @@ setup(
         'gevent',
         'gevent_subprocess',
         'requests',
+        'pytz',
         'pyzmq',
     ]
 )
