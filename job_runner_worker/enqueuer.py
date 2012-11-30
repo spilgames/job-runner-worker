@@ -1,6 +1,5 @@
 import json
 import logging
-import re
 from datetime import datetime
 
 import zmq.green as zmq
@@ -37,8 +36,8 @@ def enqueue_runs(zmq_context, run_queue, event_queue):
     subscriber.setsockopt(zmq.SUBSCRIBE, 'master.broadcast.{0}'.format(
         config.get('job_runner_worker', 'api_key')))
 
-    api_key_match_re = re.compile('^master.broadcast.{0}$'.format(
-        config.get('job_runner_worker', 'api_key')))
+    expected_address = 'master.broadcast.{0}'.format(
+        config.get('job_runner_worker', 'api_key'))
 
     while True:
         address, content = subscriber.recv_multipart()
@@ -46,7 +45,7 @@ def enqueue_runs(zmq_context, run_queue, event_queue):
         # since zmq is subscribed to everything that starts with the given
         # prefix, we have to do a double check to make sure this is an exact
         # match.
-        if not api_key_match_re.match(address):
+        if not address == expected_address:
             continue
 
         logger.debug('Received [{0}]: {1}'.format(address, content))
