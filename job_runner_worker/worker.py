@@ -28,6 +28,7 @@ def execute_run(run_queue, event_queue):
     logger.info('Started run executer')
 
     for run in run_queue:
+
         file_desc, file_path = tempfile.mkstemp(
             dir=config.get('job_runner_worker', 'script_temp_path')
         )
