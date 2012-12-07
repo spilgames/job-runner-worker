@@ -41,14 +41,16 @@ def execute_run(run_queue, event_queue):
         file_obj.write(run.job.script_content.replace('\r', ''))
         file_obj.close()
 
-        run.patch({
-            'start_dts': datetime.now(utc).isoformat(' ')
-        })
-        event_queue.put(json.dumps({'event': 'started', 'run_id': run.id}))
-
         logger.info('Starting run {0}'.format(run.resource_uri))
         sub_proc = subprocess.Popen(
             [file_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        run.patch({
+            'start_dts': datetime.now(utc).isoformat(' '),
+            'pid': sub_proc.pid,
+        })
+        event_queue.put(json.dumps({'event': 'started', 'run_id': run.id}))
+
         out, err = sub_proc.communicate()
         logger.info('Run {0} ended'.format(run.resource_uri))
 

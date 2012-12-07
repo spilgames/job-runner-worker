@@ -31,14 +31,15 @@ class ModuleTestCase(unittest.TestCase):
 
         dts = datetime.now.return_value.isoformat.return_value
 
+        self.assertTrue('pid' in run.patch.call_args_list[0][0][0])
+        self.assertEqual(dts, run.patch.call_args_list[0][0][0]['start_dts'])
         self.assertEqual([
-            call({'start_dts': dts}),
             call({
                 'return_dts': dts,
                 'return_log': u'H\xe9llo World!\n'.encode('utf-8'),
                 'return_success': True,
             })
-        ], run.patch.call_args_list)
+        ], run.patch.call_args_list[1:])
         self.assertEqual([
             call('{"event": "started", "run_id": 1234}'),
             call('{"event": "returned", "run_id": 1234}'),
