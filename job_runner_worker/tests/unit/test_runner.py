@@ -14,6 +14,7 @@ class ModuleTestCase(unittest.TestCase):
     @patch('job_runner_worker.runner.publish')
     @patch('job_runner_worker.runner.reset_incomplete_runs')
     @patch('job_runner_worker.runner.execute_run')
+    @patch('job_runner_worker.runner.kill_run')
     @patch('job_runner_worker.runner.enqueue_actions')
     @patch('job_runner_worker.runner.gevent')
     @patch('job_runner_worker.runner.Queue')
@@ -24,6 +25,7 @@ class ModuleTestCase(unittest.TestCase):
             Queue,
             gevent,
             enqueue_actions,
+            kill_run,
             execute_run,
             reset_incomplete_runs,
             publish,
@@ -55,6 +57,7 @@ class ModuleTestCase(unittest.TestCase):
             call(execute_run, Queue.return_value, Queue.return_value),
             call(execute_run, Queue.return_value, Queue.return_value),
             call(execute_run, Queue.return_value, Queue.return_value),
+            call(kill_run, Queue.return_value, Queue.return_value),
             call(
                 publish,
                 zmq.Context.return_value,

@@ -29,7 +29,7 @@ def enqueue_actions(zmq_context, run_queue, kill_queue, event_queue):
         An instance of ``Queue`` for pushing events to.
 
     """
-    logger.info('Start enqueue loop')
+    logger.info('Starting enqueue loop')
 
     subscriber = zmq_context.socket(zmq.SUB)
     subscriber.connect('tcp://{0}:{1}'.format(

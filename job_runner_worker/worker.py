@@ -25,7 +25,7 @@ def execute_run(run_queue, event_queue):
         An instance of ``Queue`` to push events to.
 
     """
-    logger.info('Started run executer')
+    logger.info('Starting run executer')
 
     for run in run_queue:
 
@@ -63,3 +63,20 @@ def execute_run(run_queue, event_queue):
         event_queue.put(json.dumps(
             {'event': 'returned', 'run_id': run.id, 'kind': 'run'}))
         os.remove(file_path)
+
+
+def kill_run(kill_queue, event_queue):
+    """
+    Execute kill-requests from the ``kill_queue``.
+
+    :param kill_queue:
+        An instance of ``Queue`` to consume kill-requests from.
+
+    :param event_queue:
+        An instance of ``Queue`` to push events to.
+
+    """
+    logger.info('Starting executor for kill-requests')
+
+    for kill_request in kill_queue:
+        pass
