@@ -14,7 +14,7 @@ class ModuleTestCase(unittest.TestCase):
     @patch('job_runner_worker.runner.publish')
     @patch('job_runner_worker.runner.reset_incomplete_runs')
     @patch('job_runner_worker.runner.execute_run')
-    @patch('job_runner_worker.runner.enqueue_runs')
+    @patch('job_runner_worker.runner.enqueue_actions')
     @patch('job_runner_worker.runner.gevent')
     @patch('job_runner_worker.runner.Queue')
     @patch('job_runner_worker.runner.config')
@@ -23,7 +23,7 @@ class ModuleTestCase(unittest.TestCase):
             config,
             Queue,
             gevent,
-            enqueue_runs,
+            enqueue_actions,
             execute_run,
             reset_incomplete_runs,
             publish,
@@ -45,7 +45,7 @@ class ModuleTestCase(unittest.TestCase):
 
         self.assertEqual([
             call(
-                enqueue_runs,
+                enqueue_actions,
                 zmq.Context.return_value,
                 Queue.return_value,
                 Queue.return_value,

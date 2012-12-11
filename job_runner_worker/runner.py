@@ -7,7 +7,7 @@ from gevent.queue import Queue
 
 from job_runner_worker.cleanup import reset_incomplete_runs
 from job_runner_worker.config import config
-from job_runner_worker.enqueuer import enqueue_runs
+from job_runner_worker.enqueuer import enqueue_actions
 from job_runner_worker.events import publish
 from job_runner_worker.worker import execute_run
 
@@ -29,7 +29,7 @@ def run():
     event_queue = Queue()
 
     greenlets.append(
-        gevent.spawn(enqueue_runs, context, run_queue, event_queue))
+        gevent.spawn(enqueue_actions, context, run_queue, event_queue))
 
     for x in range(concurrent_jobs):
         greenlets.append(gevent.spawn(execute_run, run_queue, event_queue))

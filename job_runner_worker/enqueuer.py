@@ -12,7 +12,7 @@ from job_runner_worker.models import Run
 logger = logging.getLogger(__name__)
 
 
-def enqueue_runs(zmq_context, run_queue, event_queue):
+def enqueue_actions(zmq_context, run_queue, event_queue):
     """
     Populate the ``run_queue``.
 

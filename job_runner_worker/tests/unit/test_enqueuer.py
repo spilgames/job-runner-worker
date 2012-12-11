@@ -4,7 +4,7 @@ import unittest2 as unittest
 from mock import Mock, patch
 from pytz import utc
 
-from job_runner_worker.enqueuer import enqueue_runs
+from job_runner_worker.enqueuer import enqueue_actions
 
 
 class ModuleTestCase(unittest.TestCase):
@@ -14,9 +14,9 @@ class ModuleTestCase(unittest.TestCase):
     @patch('job_runner_worker.enqueuer.datetime')
     @patch('job_runner_worker.enqueuer.config')
     @patch('job_runner_worker.enqueuer.Run')
-    def test_enqueue_runs(self, Run, config, datetime):
+    def test_enqueue_actions(self, Run, config, datetime):
         """
-        Test :func:`.enqueue_runs`.
+        Test :func:`.enqueue_actions`.
         """
         config.get.return_value = 'foo'
 
@@ -40,7 +40,7 @@ class ModuleTestCase(unittest.TestCase):
         Run.return_value = run
 
         self.assertRaises(
-            Exception, enqueue_runs, zmq_context, run_queue, event_queue)
+            Exception, enqueue_actions, zmq_context, run_queue, event_queue)
 
         run.patch.assert_called_once_with({
             'enqueue_dts': datetime.now.return_value.isoformat.return_value
