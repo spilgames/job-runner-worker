@@ -49,7 +49,8 @@ def execute_run(run_queue, event_queue):
             'start_dts': datetime.now(utc).isoformat(' '),
             'pid': sub_proc.pid,
         })
-        event_queue.put(json.dumps({'event': 'started', 'run_id': run.id}))
+        event_queue.put(json.dumps(
+            {'event': 'started', 'run_id': run.id, 'kind': 'run'}))
 
         out, err = sub_proc.communicate()
         logger.info('Run {0} ended'.format(run.resource_uri))
@@ -59,5 +60,6 @@ def execute_run(run_queue, event_queue):
             'return_log': '{0}{1}'.format(out, err),
             'return_success': False if sub_proc.returncode else True,
         })
-        event_queue.put(json.dumps({'event': 'returned', 'run_id': run.id}))
+        event_queue.put(json.dumps(
+            {'event': 'returned', 'run_id': run.id, 'kind': 'run'}))
         os.remove(file_path)

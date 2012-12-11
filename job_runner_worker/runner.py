@@ -25,11 +25,15 @@ def run():
     reset_incomplete_runs()
     concurrent_jobs = config.getint('job_runner_worker', 'concurrent_jobs')
 
-    run_queue = Queue(concurrent_jobs)
+    run_queue = Queue()
+    kill_queue = Queue()
     event_queue = Queue()
 
     greenlets.append(
-        gevent.spawn(enqueue_actions, context, run_queue, event_queue))
+        gevent.spawn(
+            enqueue_actions, context, run_queue, kill_queue, event_queue
+        )
+    )
 
     for x in range(concurrent_jobs):
         greenlets.append(gevent.spawn(execute_run, run_queue, event_queue))

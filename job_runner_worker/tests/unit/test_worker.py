@@ -41,7 +41,7 @@ class ModuleTestCase(unittest.TestCase):
             })
         ], run.patch.call_args_list[1:])
         self.assertEqual([
-            call('{"event": "started", "run_id": 1234}'),
-            call('{"event": "returned", "run_id": 1234}'),
+            call('{"kind": "run", "event": "started", "run_id": 1234}'),
+            call('{"kind": "run", "event": "returned", "run_id": 1234}'),
         ], event_queue.put.call_args_list)
         datetime.now.assert_called_with(utc)

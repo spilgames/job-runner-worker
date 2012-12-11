@@ -5,6 +5,7 @@ from requests.exceptions import RequestException
 
 from job_runner_worker.models import (
     BaseRestModel,
+    KillRequest,
     RequestClientError,
     RequestServerError,
     Run,
@@ -214,3 +215,18 @@ class RunTestCase(unittest.TestCase):
         self.assertEqual(JobMock.return_value, run_model.job)
 
         JobMock.assert_called_once_with('/job/resource')
+
+
+class KillRequestTestCase(unittest.TestCase):
+    """
+    Tests for :class:`.KillRequest`.
+    """
+    @patch('job_runner_worker.models.Run')
+    def test_run_property(self, RunMock):
+        """
+        Test run property.
+        """
+        kill_request_model = KillRequest(Mock(), {'run': '/run/resource'})
+
+        self.assertEqual(RunMock.return_value, kill_request_model.run)
+        RunMock.assert_called_once_with('/run/resource')

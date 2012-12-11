@@ -213,3 +213,12 @@ class Job(BaseRestModel):
     """
     Model class for job resources.
     """
+
+
+class KillRequest(BaseRestModel):
+    """
+    Model class for kill-requests.
+    """
+    @property
+    def run(self):
+        return Run(self.__getattr__('run'))

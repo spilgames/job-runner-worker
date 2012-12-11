@@ -25,6 +25,7 @@ class ModuleTestCase(unittest.TestCase):
         ConfigParser.ConfigParser.assert_called_once_with({
             'log_level': 'info',
             'run_resource_uri': '/api/v1/run/',
+            'kill_request_resource_uri': '/api/v1/kill_request/',
             'concurrent_jobs': 4,
             'ws_server_port': 5555,
             'broadcaster_server_port': 5556,
