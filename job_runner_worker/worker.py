@@ -54,7 +54,6 @@ def execute_run(run_queue, event_queue):
 
         out, err = sub_proc.communicate()
         logger.info('Run {0} ended'.format(run.resource_uri))
-
         run.patch({
             'return_dts': datetime.now(utc).isoformat(' '),
             'return_log': '{0}{1}'.format(out, err),
@@ -79,4 +78,13 @@ def kill_run(kill_queue, event_queue):
     logger.info('Starting executor for kill-requests')
 
     for kill_request in kill_queue:
-        pass
+        run = kill_request.run
+
+        sub_proc = subprocess.Popen(['kill', str(run.pid)])
+        sub_proc.wait()
+        kill_request.patch({'execute_dts': datetime.now(utc).isoformat(' ')})
+        event_queue.put(json.dumps({
+            'event': 'executed',
+            'kill_request_id': kill_request.id,
+            'kind': 'kill_request'
+        }))
