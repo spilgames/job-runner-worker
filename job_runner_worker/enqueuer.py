@@ -6,15 +6,15 @@ import zmq.green as zmq
 from pytz import utc
 
 from job_runner_worker.config import config
-from job_runner_worker.models import Run
+from job_runner_worker.models import KillRequest, Run
 
 
 logger = logging.getLogger(__name__)
 
 
-def enqueue_runs(zmq_context, run_queue, event_queue):
+def enqueue_actions(zmq_context, run_queue, kill_queue, event_queue):
     """
-    Populate the ``run_queue``.
+    Handle incoming actions sent by the broadcaster.
 
     :param zmq_context:
         An instance of ``zmq.Context``.
@@ -22,11 +22,14 @@ def enqueue_runs(zmq_context, run_queue, event_queue):
     :param run_queue:
         An instance of ``Queue`` for pushing the runs to.
 
+    :param kill_queue:
+        An instance of ``Queue`` for pushing the kill-requests to.
+
     :param event_queue:
         An instance of ``Queue`` for pushing events to.
 
     """
-    logger.info('Start enqueue loop')
+    logger.info('Starting enqueue loop')
 
     subscriber = zmq_context.socket(zmq.SUB)
     subscriber.connect('tcp://{0}:{1}'.format(
@@ -52,20 +55,56 @@ def enqueue_runs(zmq_context, run_queue, event_queue):
         message = json.loads(content)
 
         if message['action'] == 'enqueue':
-            run = Run('{0}{1}/'.format(
-                config.get('job_runner_worker', 'run_resource_uri'),
-                message['run_id']
-            ))
-            if run.enqueue_dts:
-                logger.warning(
-                    'Was expecting that {0} was not scheduled yet'.format(
-                        run.id))
-            else:
-                run.patch({
-                    'enqueue_dts': datetime.now(utc).isoformat(' ')
-                })
-                run_queue.put(run)
-                event_queue.put(json.dumps(
-                    {'event': 'enqueued', 'run_id': run.id}))
+            _handle_enqueue_action(message, run_queue, event_queue)
+
+        elif message['action'] == 'kill':
+            _handle_kill_action(message, kill_queue, event_queue)
 
     subscriber.close()
+
+
+def _handle_enqueue_action(message, run_queue, event_queue):
+    """
+    Handle the ``'enqueue'`` action.
+    """
+    run = Run('{0}{1}/'.format(
+        config.get('job_runner_worker', 'run_resource_uri'),
+        message['run_id']
+    ))
+
+    if run.enqueue_dts:
+        logger.warning(
+            'Was expecting that run: {0} was not in queue yet'.format(
+                run.id))
+    else:
+        run.patch({
+            'enqueue_dts': datetime.now(utc).isoformat(' ')
+        })
+        run_queue.put(run)
+        event_queue.put(json.dumps(
+            {'event': 'enqueued', 'run_id': run.id, 'kind': 'run'}))
+
+
+def _handle_kill_action(message, kill_queue, event_queue):
+    """
+    Handle the ``'kill'`` action.
+    """
+    kill_request = KillRequest('{0}{1}/'.format(
+        config.get('job_runner_worker', 'kill_request_resource_uri'),
+        message['kill_request_id']
+    ))
+
+    if kill_request.enqueue_dts:
+        logger.warning(
+            'Was expecting that kill: {0} was not in queue yet'.format(
+                message['kill_request_id']))
+    else:
+        kill_request.patch({
+            'enqueue_dts': datetime.now(utc).isoformat(' ')
+        })
+        kill_queue.put(kill_request)
+        event_queue.put(json.dumps({
+            'event': 'enqueued',
+            'kill_request_id': kill_request.id,
+            'kind': 'kill_request'
+        }))

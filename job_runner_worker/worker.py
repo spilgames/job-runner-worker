@@ -25,7 +25,7 @@ def execute_run(run_queue, event_queue):
         An instance of ``Queue`` to push events to.
 
     """
-    logger.info('Started run executer')
+    logger.info('Starting run executer')
 
     for run in run_queue:
 
@@ -41,21 +41,50 @@ def execute_run(run_queue, event_queue):
         file_obj.write(run.job.script_content.replace('\r', ''))
         file_obj.close()
 
-        run.patch({
-            'start_dts': datetime.now(utc).isoformat(' ')
-        })
-        event_queue.put(json.dumps({'event': 'started', 'run_id': run.id}))
-
         logger.info('Starting run {0}'.format(run.resource_uri))
         sub_proc = subprocess.Popen(
             [file_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        run.patch({
+            'start_dts': datetime.now(utc).isoformat(' '),
+            'pid': sub_proc.pid,
+        })
+        event_queue.put(json.dumps(
+            {'event': 'started', 'run_id': run.id, 'kind': 'run'}))
+
         out, err = sub_proc.communicate()
         logger.info('Run {0} ended'.format(run.resource_uri))
-
         run.patch({
             'return_dts': datetime.now(utc).isoformat(' '),
             'return_log': '{0}{1}'.format(out, err),
             'return_success': False if sub_proc.returncode else True,
         })
-        event_queue.put(json.dumps({'event': 'returned', 'run_id': run.id}))
+        event_queue.put(json.dumps(
+            {'event': 'returned', 'run_id': run.id, 'kind': 'run'}))
         os.remove(file_path)
+
+
+def kill_run(kill_queue, event_queue):
+    """
+    Execute kill-requests from the ``kill_queue``.
+
+    :param kill_queue:
+        An instance of ``Queue`` to consume kill-requests from.
+
+    :param event_queue:
+        An instance of ``Queue`` to push events to.
+
+    """
+    logger.info('Starting executor for kill-requests')
+
+    for kill_request in kill_queue:
+        run = kill_request.run
+
+        sub_proc = subprocess.Popen(['kill', str(run.pid)])
+        sub_proc.wait()
+        kill_request.patch({'execute_dts': datetime.now(utc).isoformat(' ')})
+        event_queue.put(json.dumps({
+            'event': 'executed',
+            'kill_request_id': kill_request.id,
+            'kind': 'kill_request'
+        }))
