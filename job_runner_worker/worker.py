@@ -53,10 +53,12 @@ def execute_run(run_queue, event_queue):
             {'event': 'started', 'run_id': run.id, 'kind': 'run'}))
 
         out, err = sub_proc.communicate()
+        log_output = _truncate_log('{0}{1}'.format(out, err))
+
         logger.info('Run {0} ended'.format(run.resource_uri))
         run.patch({
             'return_dts': datetime.now(utc).isoformat(' '),
-            'return_log': '{0}{1}'.format(out, err),
+            'return_log': log_output,
             'return_success': False if sub_proc.returncode else True,
         })
         event_queue.put(json.dumps(
@@ -88,3 +90,25 @@ def kill_run(kill_queue, event_queue):
             'kill_request_id': kill_request.id,
             'kind': 'kill_request'
         }))
+
+
+def _truncate_log(log_txt):
+    """
+    Truncate the ``log_txt`` in case it exeeds the max. log size.
+
+    :param log_txt:
+        A ``str``.
+
+    """
+    max_log_bytes = config.getint('job_runner_worker', 'max_log_bytes')
+
+    if len(log_txt) > max_log_bytes:
+        top_length = int(max_log_bytes * 0.2)
+        bottom_length = int(max_log_bytes * 0.8)
+
+        log_txt = '{0}\n\n[truncated]\n\n{1}'.format(
+            log_txt[:top_length],
+            log_txt[len(log_txt) - bottom_length:]
+        )
+
+    return log_txt
