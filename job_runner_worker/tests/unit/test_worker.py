@@ -4,7 +4,7 @@ import unittest2 as unittest
 from mock import Mock, call, patch
 from pytz import utc
 
-from job_runner_worker.worker import execute_run, kill_run
+from job_runner_worker.worker import execute_run, kill_run, _truncate_log
 
 
 class ModuleTestCase(unittest.TestCase):
@@ -69,3 +69,19 @@ class ModuleTestCase(unittest.TestCase):
             '{"kill_request_id": 1234, "kind": "kill_request", '
             '"event": "executed"}'
         ))
+
+    @patch('job_runner_worker.worker.config')
+    def test__truncate_log(self, config):
+        """
+        Test :func:`._truncate_log`.
+        """
+        config.getint.return_value = 100
+
+        input_string = '{0}{1}'.format(
+            ''.join(['a'] * 30), ''.join(['b'] * 100))
+        expected_out = '{0}\n\n[truncated]\n\n{1}'.format(
+            ''.join(['a'] * 20),
+            ''.join(['b'] * 80),
+        )
+
+        self.assertEqual(expected_out, _truncate_log(input_string))
