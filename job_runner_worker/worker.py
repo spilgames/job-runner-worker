@@ -103,7 +103,14 @@ def _kill_pid_tree(pid):
     children = _get_child_pids(pid)
     for child_pid in children:
         _kill_pid_tree(child_pid)
-    os.kill(pid, signal.SIGKILL)
+
+    try:
+        os.kill(pid, signal.SIGKILL)
+    except OSError:
+        logger.exception(
+            'Error while killing {0}, process already finished?'.format(
+                pid)
+        )
 
 
 def _get_child_pids(pid):
