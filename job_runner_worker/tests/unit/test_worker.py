@@ -4,7 +4,9 @@ import unittest2 as unittest
 from mock import Mock, call, patch
 from pytz import utc
 
-from job_runner_worker.worker import execute_run, kill_run, _truncate_log
+from job_runner_worker.worker import (
+    execute_run, kill_run, _get_child_pids, _truncate_log
+)
 
 
 class ModuleTestCase(unittest.TestCase):
@@ -46,9 +48,9 @@ class ModuleTestCase(unittest.TestCase):
         ], event_queue.put.call_args_list)
         datetime.now.assert_called_with(utc)
 
+    @patch('job_runner_worker.worker._kill_pid_tree')
     @patch('job_runner_worker.worker.datetime')
-    @patch('job_runner_worker.worker.subprocess')
-    def test_kill_run(self, subprocess_mock, datetime):
+    def test_kill_run(self, datetime, kill_pid_tree_mock):
         """
         Test :func:`.kill_run`.
         """
@@ -61,10 +63,7 @@ class ModuleTestCase(unittest.TestCase):
 
         kill_run([kill_request], event_queue)
 
-        self.assertEqual([
-            call(['pkill', '-9', '-P', '5678']),
-            call(['kill', '-9', '5678']),
-        ], subprocess_mock.Popen.call_args_list)
+        kill_pid_tree_mock.assert_called_with(5678)
         kill_request.patch.assert_called_with({
             'execute_dts': dts,
         })
@@ -72,6 +71,17 @@ class ModuleTestCase(unittest.TestCase):
             '{"kill_request_id": 1234, "kind": "kill_request", '
             '"event": "executed"}'
         ))
+
+    @patch('job_runner_worker.worker.subprocess')
+    def test__get_child_pids(self, subprocess_mock):
+        """
+        Test :func:`._get_child_pids`.
+        """
+        sub_proc = subprocess_mock.Popen.return_value
+        sub_proc.wait.return_value = 0
+        sub_proc.communicate.return_value = [' 123\n 456\n 789\n', '']
+
+        self.assertEqual([123, 456, 789], _get_child_pids(321))
 
     @patch('job_runner_worker.worker.config')
     def test__truncate_log(self, config):

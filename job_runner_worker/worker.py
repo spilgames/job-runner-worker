@@ -2,6 +2,7 @@ import codecs
 import json
 import logging
 import os
+import signal
 import tempfile
 from datetime import datetime
 
@@ -82,16 +83,59 @@ def kill_run(kill_queue, event_queue):
     for kill_request in kill_queue:
         run = kill_request.run
 
-        sub_proc = subprocess.Popen(['pkill', '-9', '-P', str(run.pid)])
-        sub_proc.wait()
-        sub_proc = subprocess.Popen(['kill', '-9', str(run.pid)])
-        sub_proc.wait()
+        _kill_pid_tree(run.pid)
         kill_request.patch({'execute_dts': datetime.now(utc).isoformat(' ')})
         event_queue.put(json.dumps({
             'event': 'executed',
             'kill_request_id': kill_request.id,
             'kind': 'kill_request'
         }))
+
+
+def _kill_pid_tree(pid):
+    """
+    Kill a given ``pid`` including its tree of children.
+
+    :param pid:
+        An ``int`` representing the parent ``PID``.
+
+    """
+    children = _get_child_pids(pid)
+    for child_pid in children:
+        _kill_pid_tree(child_pid)
+
+    try:
+        os.kill(pid, signal.SIGKILL)
+    except OSError:
+        logger.exception(
+            'Error while killing {0}, process already finished?'.format(
+                pid)
+        )
+
+
+def _get_child_pids(pid):
+    """
+    Return the list of children ``PID``s for the given parent ``pid``.
+
+    :param pid:
+        An ``int`` representing the parent ``PID``.
+
+    :return:
+        A ``list`` of children ``PIDS``s (if any).
+
+    """
+    sub_proc = subprocess.Popen(
+        ['ps', '-o', 'pid', '--ppid', str(pid), '--noheaders'],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    ret_code = sub_proc.wait()
+
+    if ret_code == 0:
+        out, err = sub_proc.communicate()
+        return [int(x) for x in out.split('\n')[:-1]]
+
+    return []
 
 
 def _truncate_log(log_txt):
