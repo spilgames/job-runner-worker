@@ -61,7 +61,10 @@ class ModuleTestCase(unittest.TestCase):
 
         kill_run([kill_request], event_queue)
 
-        subprocess_mock.Popen.assert_called_with(['kill', '5678'])
+        self.assertEqual([
+            call(['pkill', '-9', '-P', '5678']),
+            call(['kill', '-9', '5678']),
+        ], subprocess_mock.Popen.call_args_list)
         kill_request.patch.assert_called_with({
             'execute_dts': dts,
         })

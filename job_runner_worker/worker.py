@@ -82,7 +82,9 @@ def kill_run(kill_queue, event_queue):
     for kill_request in kill_queue:
         run = kill_request.run
 
-        sub_proc = subprocess.Popen(['kill', str(run.pid)])
+        sub_proc = subprocess.Popen(['pkill', '-9', '-P', str(run.pid)])
+        sub_proc.wait()
+        sub_proc = subprocess.Popen(['kill', '-9', str(run.pid)])
         sub_proc.wait()
         kill_request.patch({'execute_dts': datetime.now(utc).isoformat(' ')})
         event_queue.put(json.dumps({
