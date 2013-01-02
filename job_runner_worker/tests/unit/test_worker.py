@@ -14,9 +14,10 @@ class ModuleTestCase(unittest.TestCase):
     Tests for :mod:`job_runner_worker.worker`.
     """
     @patch('job_runner_worker.worker.subprocess', subprocess)
+    @patch('job_runner_worker.worker.RunLog')
     @patch('job_runner_worker.worker.datetime')
     @patch('job_runner_worker.worker.config')
-    def test_execute_run(self, config, datetime):
+    def test_execute_run(self, config, datetime, RunLog):
         """
         Test :func:`.execute_run`.
         """
@@ -35,10 +36,13 @@ class ModuleTestCase(unittest.TestCase):
 
         self.assertTrue('pid' in run.patch.call_args_list[0][0][0])
         self.assertEqual(dts, run.patch.call_args_list[0][0][0]['start_dts'])
+        self.assertEqual(
+            u'H\xe9llo World!\n'.encode('utf-8'),
+            RunLog.return_value.post.call_args_list[0][0][0]['content']
+        )
         self.assertEqual([
             call({
                 'return_dts': dts,
-                'return_log': u'H\xe9llo World!\n'.encode('utf-8'),
                 'return_success': True,
             })
         ], run.patch.call_args_list[1:])
