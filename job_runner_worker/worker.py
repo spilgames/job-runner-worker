@@ -45,7 +45,7 @@ def execute_run(run_queue, event_queue):
 
         logger.info('Starting run {0}'.format(run.resource_uri))
         sub_proc = subprocess.Popen(
-            [file_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            [file_path], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
         run.patch({
             'start_dts': datetime.now(utc).isoformat(' '),
@@ -55,7 +55,7 @@ def execute_run(run_queue, event_queue):
             {'event': 'started', 'run_id': run.id, 'kind': 'run'}))
 
         out, err = sub_proc.communicate()
-        log_output = _truncate_log('{0}{1}'.format(out, err))
+        log_output = _truncate_log(out)
 
         logger.info('Run {0} ended'.format(run.resource_uri))
         run_log = RunLog(
