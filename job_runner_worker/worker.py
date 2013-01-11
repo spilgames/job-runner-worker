@@ -39,13 +39,17 @@ def execute_run(run_queue, event_queue):
         os.fdopen(file_desc).close()
 
         file_obj = codecs.open(file_path, 'w', 'utf-8')
-        os.chmod(file_path, 0700)
         file_obj.write(run.job.script_content.replace('\r', ''))
         file_obj.close()
 
+        # get shebang from content of the script
+        shebang = run.job.script_content.split('\n')[0]
+        executable = shebang.replace('#!', '').split()
+        executable.append(file_path)
+
         logger.info('Starting run {0}'.format(run.resource_uri))
         sub_proc = subprocess.Popen(
-            [file_path], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            executable, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
         run.patch({
             'start_dts': datetime.now(utc).isoformat(' '),
