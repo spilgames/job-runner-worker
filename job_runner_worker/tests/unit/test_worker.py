@@ -33,8 +33,7 @@ class ModuleTestCase(unittest.TestCase):
         execute_run([run], event_queue)
 
         dts = datetime.now.return_value.isoformat.return_value
-
-        self.assertTrue('pid' in run.patch.call_args_list[0][0][0])
+        self.assertTrue('pid' in run.patch.call_args_list[1][0][0])
         self.assertEqual(dts, run.patch.call_args_list[0][0][0]['start_dts'])
         self.assertEqual(
             u'H\xe9llo World!\n'.encode('utf-8'),
@@ -44,6 +43,44 @@ class ModuleTestCase(unittest.TestCase):
             call({
                 'return_dts': dts,
                 'return_success': True,
+            })
+        ], run.patch.call_args_list[2:])
+        self.assertEqual([
+            call('{"kind": "run", "event": "started", "run_id": 1234}'),
+            call('{"kind": "run", "event": "returned", "run_id": 1234}'),
+        ], event_queue.put.call_args_list)
+        datetime.now.assert_called_with(utc)
+
+    @patch('job_runner_worker.worker.subprocess', subprocess)
+    @patch('job_runner_worker.worker.RunLog')
+    @patch('job_runner_worker.worker.datetime')
+    @patch('job_runner_worker.worker.config')
+    def test_execute_bad_shebang(self, config, datetime, RunLog):
+        """
+        Test :func:`.execute_run` when the shebang is invalid.
+        """
+        config.get.return_value = '/tmp'
+
+        run = Mock()
+        run.id = 1234
+        run.job.script_content = (
+            u'#!I love cheese\n\necho "H\xe9llo World!";\n')
+
+        event_queue = Mock()
+
+        execute_run([run], event_queue)
+
+        dts = datetime.now.return_value.isoformat.return_value
+
+        self.assertEqual(dts, run.patch.call_args_list[0][0][0]['start_dts'])
+        log_out = RunLog.return_value.post.call_args_list[0][0][0]['content']
+        self.assertTrue(
+            log_out.startswith('Could not execute job')
+        )
+        self.assertEqual([
+            call({
+                'return_dts': dts,
+                'return_success': False,
             })
         ], run.patch.call_args_list[1:])
         self.assertEqual([
