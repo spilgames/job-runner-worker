@@ -68,6 +68,35 @@ class BaseRestModelTestCase(unittest.TestCase):
     @patch('job_runner_worker.models.HmacAuth')
     @patch('job_runner_worker.models.config')
     @patch('job_runner_worker.models.requests')
+    def test_post(self, requests, config, HmacAuth):
+        """
+        Test :meth:`.BaseRestModel.post`.
+        """
+        def config_get_side_effect(*args):
+            return {
+                ('job_runner_worker', 'api_base_url'): 'http://api/',
+                ('job_runner_worker', 'secret'): 'key',
+                ('job_runner_worker', 'api_key'): 'public',
+            }[args]
+
+        config.get.side_effect = config_get_side_effect
+        response = requests.post.return_value
+        response.status_code = 201
+
+        base_model = BaseRestModel('/path/to/resource')
+        base_model.post({'field_name': 'field_value', 'published': True})
+
+        requests.post.assert_called_once_with(
+            'http://api/path/to/resource',
+            auth=HmacAuth.return_value,
+            headers={'content-type': 'application/json'},
+            data='{"field_name": "field_value", "published": true}',
+            verify=False,
+        )
+
+    @patch('job_runner_worker.models.HmacAuth')
+    @patch('job_runner_worker.models.config')
+    @patch('job_runner_worker.models.requests')
     def test_patch_not_202(self, requests, config, HmacAuth):
         """
         Test :meth:`.BaseRestModel.patch`.
@@ -85,6 +114,27 @@ class BaseRestModelTestCase(unittest.TestCase):
 
         base_model = BaseRestModel('/path/to/resource')
         self.assertRaises(RequestClientError, base_model.patch, {'foo': 'bar'})
+
+    @patch('job_runner_worker.models.HmacAuth')
+    @patch('job_runner_worker.models.config')
+    @patch('job_runner_worker.models.requests')
+    def test_post_not_201(self, requests, config, HmacAuth):
+        """
+        Test :meth:`.BaseRestModel.patch`.
+        """
+        def config_get_side_effect(*args):
+            return {
+                ('job_runner_worker', 'api_base_url'): 'http://api/',
+                ('job_runner_worker', 'secret'): 'key',
+                ('job_runner_worker', 'api_key'): 'public',
+            }[args]
+
+        config.get.side_effect = config_get_side_effect
+        response = requests.post.return_value
+        response.status_code = 418
+
+        base_model = BaseRestModel('/path/to/resource')
+        self.assertRaises(RequestClientError, base_model.post, {'foo': 'bar'})
 
     @patch('job_runner_worker.models.HmacAuth')
     @patch('job_runner_worker.models.config')

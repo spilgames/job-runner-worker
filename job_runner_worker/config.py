@@ -18,6 +18,7 @@ def get_config_parser():
         'log_level': 'info',
         'max_log_bytes': str(800 * 1024),
         'run_resource_uri': '/api/v1/run/',
+        'run_log_resource_uri': '/api/v1/run_log/',
         'kill_request_resource_uri': '/api/v1/kill_request/',
         'concurrent_jobs': '4',
         'ws_server_port': '5555',

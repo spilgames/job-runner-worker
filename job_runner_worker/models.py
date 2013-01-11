@@ -148,6 +148,43 @@ class BaseRestModel(object):
                 raise RequestClientError('Server returned {0} - {1}'.format(
                     response.status_code, response.content))
 
+    @retry_on_requests_error
+    def post(self, attributes={}):
+        """
+        PATCH resource with given keyword arguments.
+
+        :raises:
+            :exc:`!RequestException` on ``requests`` error.
+
+        :raises:
+            :exc:`.RequestServerError` on 5xx response.
+
+        :raises:
+            :exc:`.RequestClientError` on errors caused client-side.
+
+        """
+        response = requests.post(
+            urlparse.urljoin(
+                config.get('job_runner_worker', 'api_base_url'),
+                self._resource_path
+            ),
+            auth=HmacAuth(
+                config.get('job_runner_worker', 'api_key'),
+                config.get('job_runner_worker', 'secret')
+            ),
+            headers={'content-type': 'application/json'},
+            data=json.dumps(attributes),
+            verify=False,
+        )
+
+        if response.status_code != 201:
+            if response.status_code >= 500 and response.status_code <= 599:
+                raise RequestServerError('Server returned {0} - {1}'.format(
+                    response.status_code, response.content))
+            else:
+                raise RequestClientError('Server returned {0} - {1}'.format(
+                    response.status_code, response.content))
+
     @classmethod
     @retry_on_requests_error
     def get_list(cls, resource_path, params={}):
@@ -207,6 +244,12 @@ class Run(BaseRestModel):
     @property
     def job(self):
         return Job(self.__getattr__('job'))
+
+
+class RunLog(BaseRestModel):
+    """
+    Model class for run log-output resources.
+    """
 
 
 class Job(BaseRestModel):

@@ -10,6 +10,7 @@ import gevent_subprocess as subprocess
 from pytz import utc
 
 from job_runner_worker.config import config
+from job_runner_worker.models import RunLog
 
 
 logger = logging.getLogger(__name__)
@@ -44,7 +45,7 @@ def execute_run(run_queue, event_queue):
 
         logger.info('Starting run {0}'.format(run.resource_uri))
         sub_proc = subprocess.Popen(
-            [file_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            [file_path], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
         run.patch({
             'start_dts': datetime.now(utc).isoformat(' '),
@@ -54,12 +55,20 @@ def execute_run(run_queue, event_queue):
             {'event': 'started', 'run_id': run.id, 'kind': 'run'}))
 
         out, err = sub_proc.communicate()
-        log_output = _truncate_log('{0}{1}'.format(out, err))
+        log_output = _truncate_log(out)
 
         logger.info('Run {0} ended'.format(run.resource_uri))
+        run_log = RunLog(
+            config.get('job_runner_worker', 'run_log_resource_uri'))
+        run_log.post({
+            'run': '{0}{1}/'.format(
+                config.get('job_runner_worker', 'run_resource_uri'),
+                run.id
+            ),
+            'content': log_output
+        })
         run.patch({
             'return_dts': datetime.now(utc).isoformat(' '),
-            'return_log': log_output,
             'return_success': False if sub_proc.returncode else True,
         })
         event_queue.put(json.dumps(
