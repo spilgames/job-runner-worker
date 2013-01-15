@@ -2,6 +2,7 @@ import codecs
 import json
 import logging
 import os
+
 import signal
 import tempfile
 from datetime import datetime
@@ -39,22 +40,33 @@ def execute_run(run_queue, event_queue):
         os.fdopen(file_desc).close()
 
         file_obj = codecs.open(file_path, 'w', 'utf-8')
-        os.chmod(file_path, 0700)
         file_obj.write(run.job.script_content.replace('\r', ''))
         file_obj.close()
 
+        # get shebang from content of the script
+        shebang = run.job.script_content.split('\n', 1)[0]
+        executable = shebang.replace('#!', '').split()
+        executable.append(file_path)
+
         logger.info('Starting run {0}'.format(run.resource_uri))
-        sub_proc = subprocess.Popen(
-            [file_path], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        did_run = False
+        try:
+            run.patch({'start_dts': datetime.now(utc).isoformat(' ')})
 
-        run.patch({
-            'start_dts': datetime.now(utc).isoformat(' '),
-            'pid': sub_proc.pid,
-        })
-        event_queue.put(json.dumps(
-            {'event': 'started', 'run_id': run.id, 'kind': 'run'}))
+            sub_proc = subprocess.Popen(
+                executable, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-        out, err = sub_proc.communicate()
+            event_queue.put(json.dumps(
+                {'event': 'started', 'run_id': run.id, 'kind': 'run'}))
+
+            run.patch({'pid': sub_proc.pid})
+            did_run = True
+            out, err = sub_proc.communicate()
+        except OSError as e:
+            out = 'Could not execute job: ' + str(e)
+            event_queue.put(json.dumps(
+                {'event': 'started', 'run_id': run.id, 'kind': 'run'}))
+
         log_output = _truncate_log(out)
 
         logger.info('Run {0} ended'.format(run.resource_uri))
@@ -69,7 +81,8 @@ def execute_run(run_queue, event_queue):
         })
         run.patch({
             'return_dts': datetime.now(utc).isoformat(' '),
-            'return_success': False if sub_proc.returncode else True,
+            'return_success':
+            False if did_run is False or sub_proc.returncode else True,
         })
         event_queue.put(json.dumps(
             {'event': 'returned', 'run_id': run.id, 'kind': 'run'}))
