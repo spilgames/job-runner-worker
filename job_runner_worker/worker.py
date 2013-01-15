@@ -2,6 +2,7 @@ import codecs
 import json
 import logging
 import os
+
 import signal
 import tempfile
 from datetime import datetime
@@ -61,7 +62,7 @@ def execute_run(run_queue, event_queue):
             run.patch({'pid': sub_proc.pid})
             did_run = True
             out, err = sub_proc.communicate()
-        except Exception as e:
+        except OSError as e:
             out = 'Could not execute job: ' + str(e)
             event_queue.put(json.dumps(
                 {'event': 'started', 'run_id': run.id, 'kind': 'run'}))
