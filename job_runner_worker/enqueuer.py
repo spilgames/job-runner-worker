@@ -1,6 +1,8 @@
 import json
 import logging
-from datetime import datetime
+import random
+import time
+from datetime import datetime, timedelta
 
 import zmq.green as zmq
 from pytz import utc
@@ -30,20 +32,38 @@ def enqueue_actions(zmq_context, run_queue, kill_queue, event_queue):
 
     """
     logger.info('Starting enqueue loop')
-
-    subscriber = zmq_context.socket(zmq.SUB)
-    subscriber.connect('tcp://{0}:{1}'.format(
-        config.get('job_runner_worker', 'broadcaster_server_hostname'),
-        config.get('job_runner_worker', 'broadcaster_server_port'),
-    ))
-    subscriber.setsockopt(zmq.SUBSCRIBE, 'master.broadcast.{0}'.format(
-        config.get('job_runner_worker', 'api_key')))
+    subscriber = _get_subscriber(zmq_context)
 
     expected_address = 'master.broadcast.{0}'.format(
         config.get('job_runner_worker', 'api_key'))
 
+    last_activity_dts = datetime.utcnow()
+    reconnect_after_inactivity = config.getint(
+        'job_runner_worker', 'reconnect_after_inactivity')
+
     while True:
-        address, content = subscriber.recv_multipart()
+        try:
+            address, content = subscriber.recv_multipart(zmq.NOBLOCK)
+            last_activity_dts = datetime.utcnow()
+        except zmq.ZMQError:
+            # this is needed in case the ZMQ publisher is load-balanced and the
+            # loadbalancer dropped the connection to the backend, but not the
+            # connection to our side. without this work-around, zmq will think
+            # that all is well, and we won't receive anything anymore
+            delta = datetime.utcnow() - last_activity_dts
+            if delta > timedelta(seconds=reconnect_after_inactivity):
+                logger.warning(
+                    'There was not activity for {0}, reconnecting'
+                    ' to publisher'.format(delta)
+                )
+                subscriber.close()
+                time.sleep(random.randint(1, 10))
+                subscriber = _get_subscriber(zmq_context)
+                last_activity_dts = datetime.utcnow()
+                continue
+            else:
+                time.sleep(0.5)
+                continue
 
         # since zmq is subscribed to everything that starts with the given
         # prefix, we have to do a double check to make sure this is an exact
@@ -61,6 +81,20 @@ def enqueue_actions(zmq_context, run_queue, kill_queue, event_queue):
             _handle_kill_action(message, kill_queue, event_queue)
 
     subscriber.close()
+
+
+def _get_subscriber(zmq_context):
+    """
+    Return a new subscriber connection for the given ``zmq_context``.
+    """
+    subscriber = zmq_context.socket(zmq.SUB)
+    subscriber.connect('tcp://{0}:{1}'.format(
+        config.get('job_runner_worker', 'broadcaster_server_hostname'),
+        config.get('job_runner_worker', 'broadcaster_server_port'),
+    ))
+    subscriber.setsockopt(zmq.SUBSCRIBE, 'master.broadcast.{0}'.format(
+        config.get('job_runner_worker', 'api_key')))
+    return subscriber
 
 
 def _handle_enqueue_action(message, run_queue, event_queue):
