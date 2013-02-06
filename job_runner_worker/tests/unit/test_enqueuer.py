@@ -4,7 +4,11 @@ from mock import Mock, patch
 from pytz import utc
 
 from job_runner_worker.enqueuer import (
-    _handle_enqueue_action, _handle_kill_action, enqueue_actions)
+    _handle_enqueue_action,
+    _handle_kill_action,
+    _handle_ping_action,
+    enqueue_actions
+)
 
 
 class ModuleTestCase(unittest.TestCase):
@@ -139,3 +143,29 @@ class ModuleTestCase(unittest.TestCase):
             '"event": "enqueued"}'
         ))
         datetime.now.assert_called_once_with(utc)
+
+    @patch('job_runner_worker.enqueuer.datetime')
+    @patch('job_runner_worker.enqueuer.Worker')
+    @patch('job_runner_worker.enqueuer.config')
+    def test__handle_ping_action(self, config, Worker, datetime):
+        """
+        Test func:`._handle_ping_action`.
+        """
+        config.get.side_effect = lambda *args: '.'.join(args)
+
+        worker = Mock()
+        Worker.get_list.return_value = [worker]
+
+        _handle_ping_action(Mock())
+
+        Worker.get_list.assert_called_once_with(
+            'job_runner_worker.worker_resource_uri',
+            params={
+                'api_key': 'job_runner_worker.api_key'
+            }
+        )
+
+        dts = datetime.now.return_value.isoformat.return_value
+        worker.patch.assert_called_once_with({
+            'ping_response_dts': dts
+        })

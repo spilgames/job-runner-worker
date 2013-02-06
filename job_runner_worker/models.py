@@ -265,3 +265,9 @@ class KillRequest(BaseRestModel):
     @property
     def run(self):
         return Run(self.__getattr__('run'))
+
+
+class Worker(BaseRestModel):
+    """
+    Model class for worker resources.
+    """
