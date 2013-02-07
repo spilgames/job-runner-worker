@@ -32,7 +32,7 @@ class ModuleTestCase(unittest.TestCase):
             'concurrent_jobs': '4',
             'ws_server_port': '5555',
             'broadcaster_server_port': '5556',
-            'reconnect_after_inactivity': str(60 * 5),
+            'reconnect_after_inactivity': str(60 * 10),
         })
         config_mock.read.assert_called_once_with('/path/to/settings')
         self.assertEqual(config_mock, config)
