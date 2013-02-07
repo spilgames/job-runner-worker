@@ -17,6 +17,7 @@ def get_config_parser():
     config = ConfigParser.ConfigParser({
         'log_level': 'info',
         'max_log_bytes': str(800 * 1024),
+        'worker_resource_uri': '/api/v1/worker/',
         'run_resource_uri': '/api/v1/run/',
         'run_log_resource_uri': '/api/v1/run_log/',
         'kill_request_resource_uri': '/api/v1/kill_request/',

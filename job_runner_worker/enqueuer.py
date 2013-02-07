@@ -8,7 +8,7 @@ import zmq.green as zmq
 from pytz import utc
 
 from job_runner_worker.config import config
-from job_runner_worker.models import KillRequest, Run
+from job_runner_worker.models import KillRequest, Run, Worker
 
 
 logger = logging.getLogger(__name__)
@@ -80,6 +80,9 @@ def enqueue_actions(zmq_context, run_queue, kill_queue, event_queue):
         elif message['action'] == 'kill':
             _handle_kill_action(message, kill_queue, event_queue)
 
+        elif message['action'] == 'ping':
+            _handle_ping_action(message)
+
     subscriber.close()
 
 
@@ -142,3 +145,22 @@ def _handle_kill_action(message, kill_queue, event_queue):
             'kill_request_id': kill_request.id,
             'kind': 'kill_request'
         }))
+
+
+def _handle_ping_action(message):
+    """
+    Handle the ``'ping'`` action.
+    """
+    worker_list = Worker.get_list(
+        config.get('job_runner_worker', 'worker_resource_uri'),
+        params={
+            'api_key': config.get('job_runner_worker', 'api_key')
+        }
+    )
+
+    if len(worker_list) == 1:
+        worker_list[0].patch({
+            'ping_response_dts': datetime.now(utc).isoformat(' '),
+        })
+    else:
+        logger.warning('Workers by api_key query resulted in multiple results')
