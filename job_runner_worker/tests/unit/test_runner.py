@@ -78,7 +78,12 @@ class ModuleTestCase(unittest.TestCase):
                 Queue.return_value,
                 Queue.return_value
             ),
-            call(kill_run, Queue.return_value, Queue.return_value),
+            call(
+                kill_run,
+                Queue.return_value,
+                Queue.return_value,
+                Queue.return_value
+            ),
             call(
                 publish,
                 zmq.Context.return_value,

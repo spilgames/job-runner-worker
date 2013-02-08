@@ -49,7 +49,8 @@ def run():
             exit_queue,
         ))
 
-    greenlets.append(gevent.spawn(kill_run, kill_queue, event_queue))
+    greenlets.append(gevent.spawn(
+        kill_run, kill_queue, event_queue, exit_queue))
     greenlets.append(gevent.spawn(publish, context, event_queue))
 
     try:

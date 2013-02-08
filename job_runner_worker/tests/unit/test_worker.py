@@ -127,7 +127,20 @@ class ModuleTestCase(unittest.TestCase):
 
         dts = datetime.now.return_value.isoformat.return_value
 
-        kill_run([kill_request], event_queue)
+        kill_queue = Queue()
+        kill_queue.put(kill_request)
+        exit_queue = Mock()
+
+        exit_queue_return = [Empty, None]
+
+        def exit_queue_side_effect(*args, **kwargs):
+            value = exit_queue_return.pop(0)
+            if callable(value):
+                raise value()
+
+        exit_queue.get.side_effect = exit_queue_side_effect
+
+        kill_run(kill_queue, event_queue, exit_queue)
 
         kill_pid_tree_mock.assert_called_with(5678)
         kill_request.patch.assert_called_with({

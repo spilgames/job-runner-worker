@@ -38,7 +38,7 @@ def execute_run(run_queue, event_queue, exit_queue):
     while True:
         try:
             exit_queue.get(block=False)
-            logger.info('Termintating enqueue loop')
+            logger.info('Termintating run executer')
             return
         except Empty:
             pass
@@ -47,6 +47,7 @@ def execute_run(run_queue, event_queue, exit_queue):
             run = run_queue.get(block=False)
         except Empty:
             time.sleep(0.5)
+            continue
 
         file_desc, file_path = tempfile.mkstemp(
             dir=config.get('job_runner_worker', 'script_temp_path')
@@ -105,7 +106,7 @@ def execute_run(run_queue, event_queue, exit_queue):
         os.remove(file_path)
 
 
-def kill_run(kill_queue, event_queue):
+def kill_run(kill_queue, event_queue, exit_queue):
     """
     Execute kill-requests from the ``kill_queue``.
 
@@ -115,10 +116,27 @@ def kill_run(kill_queue, event_queue):
     :param event_queue:
         An instance of ``Queue`` to push events to.
 
+    :param exit_queue:
+        An instance of ``Queue`` to consume from. If this queue is not empty,
+        the function needs to terminate.
+
     """
     logger.info('Starting executor for kill-requests')
 
-    for kill_request in kill_queue:
+    while True:
+        try:
+            exit_queue.get(block=False)
+            logger.info('Termintating executor for kill-requests')
+            return
+        except Empty:
+            pass
+
+        try:
+            kill_request = kill_queue.get(block=False)
+        except Empty:
+            time.slee(0.5)
+            continue
+
         run = kill_request.run
 
         _kill_pid_tree(run.pid)
