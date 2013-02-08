@@ -35,19 +35,20 @@ def publish(zmq_context, event_queue, exit_queue):
 
     while True:
         try:
+            event = event_queue.get(block=False)
+            logger.debug('Sending event: {0}'.format(event))
+            publisher.send_multipart(['worker.event', event])
+            continue
+        except Empty:
+            pass
+
+        try:
             exit_queue.get(block=False)
             logger.info('Terminating event publisher')
             return
         except Empty:
             pass
 
-        try:
-            event = event_queue.get(block=False)
-        except Empty:
-            time.sleep(0.5)
-            continue
-
-        logger.debug('Sending event: {0}'.format(event))
-        publisher.send_multipart(['worker.event', event])
+        time.sleep(0.5)
 
     publisher.close()

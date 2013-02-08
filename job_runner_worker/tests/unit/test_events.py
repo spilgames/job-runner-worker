@@ -31,15 +31,6 @@ class ModuleTestCase(unittest.TestCase):
         event_queue.put('bar')
         exit_queue = Mock()
 
-        exit_queue_return = [Empty, Empty, None]
-
-        def exit_queue_side_effect(*args, **kwargs):
-            value = exit_queue_return.pop(0)
-            if callable(value):
-                raise value()
-
-        exit_queue.get.side_effect = exit_queue_side_effect
-
         publish(context, event_queue, exit_queue)
 
         self.assertEqual([

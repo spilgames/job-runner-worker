@@ -134,7 +134,7 @@ def kill_run(kill_queue, event_queue, exit_queue):
         try:
             kill_request = kill_queue.get(block=False)
         except Empty:
-            time.slee(0.5)
+            time.sleep(0.5)
             continue
 
         run = kill_request.run
