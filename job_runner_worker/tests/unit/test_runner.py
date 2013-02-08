@@ -88,6 +88,7 @@ class ModuleTestCase(unittest.TestCase):
                 publish,
                 zmq.Context.return_value,
                 Queue.return_value,
+                Queue.return_value,
             )
         ], gevent.spawn.call_args_list)
 
