@@ -8,7 +8,7 @@ setup(
     version=job_runner_worker.__version__,
     url='https://github.com/spilgames/dwh/',
     author='Orne Brocaar',
-    author_email='orne.brocaar@spilgames.com',
+    author_email='datawarehouse@spilgames.com',
     description='Job-Runner Worker',
     long_description=open('README.rst').read(),
     packages=[
