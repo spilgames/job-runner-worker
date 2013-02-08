@@ -1,6 +1,7 @@
 import subprocess
 import unittest2 as unittest
 
+from gevent.queue import Queue, Empty
 from mock import Mock, call, patch
 from pytz import utc
 
@@ -29,8 +30,20 @@ class ModuleTestCase(unittest.TestCase):
             u'#!/usr/bin/env bash\n\necho "H\xe9llo World!";\n')
 
         event_queue = Mock()
+        exit_queue = Mock()
+        run_queue = Queue()
+        run_queue.put(run)
 
-        execute_run([run], event_queue)
+        exit_queue_return = [Empty, None]
+
+        def exit_queue_side_effect(*args, **kwargs):
+            value = exit_queue_return.pop(0)
+            if callable(value):
+                raise value()
+
+        exit_queue.get.side_effect = exit_queue_side_effect
+
+        execute_run(run_queue, event_queue, exit_queue)
 
         dts = datetime.now.return_value.isoformat.return_value
         self.assertTrue('pid' in run.patch.call_args_list[1][0][0])
@@ -67,8 +80,20 @@ class ModuleTestCase(unittest.TestCase):
             u'#!I love cheese\n\necho "H\xe9llo World!";\n')
 
         event_queue = Mock()
+        exit_queue = Mock()
+        run_queue = Queue()
+        run_queue.put(run)
 
-        execute_run([run], event_queue)
+        exit_queue_return = [Empty, None]
+
+        def exit_queue_side_effect(*args, **kwargs):
+            value = exit_queue_return.pop(0)
+            if callable(value):
+                raise value()
+
+        exit_queue.get.side_effect = exit_queue_side_effect
+
+        execute_run(run_queue, event_queue, exit_queue)
 
         dts = datetime.now.return_value.isoformat.return_value
 

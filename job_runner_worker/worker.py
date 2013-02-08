@@ -2,13 +2,14 @@ import codecs
 import json
 import logging
 import os
-
 import signal
 import tempfile
+import time
 from datetime import datetime
 
 import gevent_subprocess as subprocess
 from pytz import utc
+from gevent.queue import Empty
 
 from job_runner_worker.config import config
 from job_runner_worker.models import RunLog
@@ -17,7 +18,7 @@ from job_runner_worker.models import RunLog
 logger = logging.getLogger(__name__)
 
 
-def execute_run(run_queue, event_queue):
+def execute_run(run_queue, event_queue, exit_queue):
     """
     Execute runs from the ``run_queue``.
 
@@ -27,10 +28,25 @@ def execute_run(run_queue, event_queue):
     :param event_queue:
         An instance of ``Queue`` to push events to.
 
+    :param exit_queue:
+        An instance of ``Queue`` to consume from. If this queue is not empty,
+        the function needs to terminate.
+
     """
     logger.info('Starting run executer')
 
-    for run in run_queue:
+    while True:
+        try:
+            exit_queue.get(block=False)
+            logger.info('Termintating enqueue loop')
+            return
+        except Empty:
+            pass
+
+        try:
+            run = run_queue.get(block=False)
+        except Empty:
+            time.sleep(0.5)
 
         file_desc, file_path = tempfile.mkstemp(
             dir=config.get('job_runner_worker', 'script_temp_path')
