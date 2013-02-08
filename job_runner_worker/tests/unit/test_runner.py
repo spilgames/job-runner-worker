@@ -52,6 +52,7 @@ class ModuleTestCase(unittest.TestCase):
                 Queue.return_value,
                 Queue.return_value,
                 Queue.return_value,
+                Queue.return_value,
             ),
             call(execute_run, Queue.return_value, Queue.return_value),
             call(execute_run, Queue.return_value, Queue.return_value),

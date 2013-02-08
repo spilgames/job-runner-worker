@@ -28,10 +28,16 @@ def run():
     run_queue = Queue()
     kill_queue = Queue()
     event_queue = Queue()
+    exit_queue = Queue()
 
     greenlets.append(
         gevent.spawn(
-            enqueue_actions, context, run_queue, kill_queue, event_queue
+            enqueue_actions,
+            context,
+            run_queue,
+            kill_queue,
+            event_queue,
+            exit_queue
         )
     )
 
