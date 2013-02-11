@@ -1,5 +1,7 @@
 import unittest2 as unittest
 
+import gevent
+from gevent.queue import Queue
 from mock import Mock, patch
 from pytz import utc
 
@@ -42,11 +44,29 @@ class ModuleTestCase(unittest.TestCase):
             zmq_context,
             run_queue,
             kill_queue,
-            event_queue
+            event_queue,
+            Queue()
         )
 
         enqueue_action.assert_called_once_with(
             {'action': 'enqueue'}, run_queue, event_queue)
+
+    @patch('job_runner_worker.enqueuer.config')
+    def test_enqueue_actions_exit(self, config):
+        """
+        Test :func:`.enqueue_actions` returning.
+
+        The infinite loop should return because we put something in the
+        ``exit_queue``.
+
+        """
+        config.get.side_effect = lambda *args: '.'.join(args)
+        exit_queue = Queue()
+        exit_queue.put(Mock())
+
+        greenlet = gevent.spawn(
+            enqueue_actions, Mock(), Mock(), Mock(), Mock(), exit_queue)
+        greenlet.join()
 
     @patch('job_runner_worker.enqueuer._handle_kill_action')
     @patch('job_runner_worker.enqueuer.config')
@@ -75,7 +95,8 @@ class ModuleTestCase(unittest.TestCase):
             zmq_context,
             run_queue,
             kill_queue,
-            event_queue
+            event_queue,
+            Queue()
         )
 
         kill_action.assert_called_once_with(

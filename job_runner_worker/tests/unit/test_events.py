@@ -1,5 +1,6 @@
 import unittest2 as unittest
 
+from gevent.queue import Empty, Queue
 from mock import Mock, call, patch
 
 from job_runner_worker.events import publish
@@ -25,12 +26,12 @@ class ModuleTestCase(unittest.TestCase):
         context = Mock()
         publisher = context.socket.return_value
 
-        event_queue = [
-            'foo',
-            'bar',
-        ]
+        event_queue = Queue()
+        event_queue.put('foo')
+        event_queue.put('bar')
+        exit_queue = Mock()
 
-        publish(context, event_queue)
+        publish(context, event_queue, exit_queue)
 
         self.assertEqual([
             call(['worker.event', 'foo']),

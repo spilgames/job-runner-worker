@@ -5,6 +5,7 @@ import time
 from datetime import datetime, timedelta
 
 import zmq.green as zmq
+from gevent.queue import Empty
 from pytz import utc
 
 from job_runner_worker.config import config
@@ -14,7 +15,8 @@ from job_runner_worker.models import KillRequest, Run, Worker
 logger = logging.getLogger(__name__)
 
 
-def enqueue_actions(zmq_context, run_queue, kill_queue, event_queue):
+def enqueue_actions(
+        zmq_context, run_queue, kill_queue, event_queue, exit_queue):
     """
     Handle incoming actions sent by the broadcaster.
 
@@ -30,6 +32,10 @@ def enqueue_actions(zmq_context, run_queue, kill_queue, event_queue):
     :param event_queue:
         An instance of ``Queue`` for pushing events to.
 
+    :param exit_queue:
+        An instance of ``Queue`` to consume from. If this queue is not empty,
+        the function needs to terminate.
+
     """
     logger.info('Starting enqueue loop')
     subscriber = _get_subscriber(zmq_context)
@@ -42,6 +48,13 @@ def enqueue_actions(zmq_context, run_queue, kill_queue, event_queue):
         'job_runner_worker', 'reconnect_after_inactivity')
 
     while True:
+        try:
+            exit_queue.get(block=False)
+            logger.info('Termintating enqueue loop')
+            return
+        except Empty:
+            pass
+
         try:
             address, content = subscriber.recv_multipart(zmq.NOBLOCK)
             last_activity_dts = datetime.utcnow()
