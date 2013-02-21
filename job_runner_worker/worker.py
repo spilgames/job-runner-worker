@@ -49,25 +49,30 @@ def execute_run(run_queue, event_queue, exit_queue):
             time.sleep(0.5)
             continue
 
-        file_desc, file_path = tempfile.mkstemp(
-            dir=config.get('job_runner_worker', 'script_temp_path')
-        )
-        # seems there isn't support to open file descriptors directly in
-        # utf-8 encoding
-        os.fdopen(file_desc).close()
-
-        file_obj = codecs.open(file_path, 'w', 'utf-8')
-        file_obj.write(run.job.script_content.replace('\r', ''))
-        file_obj.close()
-
-        # get shebang from content of the script
-        shebang = run.job.script_content.split('\n', 1)[0]
-        executable = shebang.replace('#!', '').split()
-        executable.append(file_path)
-
-        logger.info('Starting run {0}'.format(run.resource_uri))
+        # If *anything goes wrong* we want to have feedback bubling up to
+        # the master server, including email sent and dashboard updated.
+        # From a user POV, a job not run is a failure.
+        # Hence the catchall try.
         did_run = False
         try:
+            file_desc, file_path = tempfile.mkstemp(
+                dir=config.get('job_runner_worker', 'script_temp_path')
+            )
+            # seems there isn't support to open file descriptors directly in
+            # utf-8 encoding
+            os.fdopen(file_desc).close()
+
+            file_obj = codecs.open(file_path, 'w', 'utf-8')
+            file_obj.write(run.job.script_content.replace('\r', ''))
+            file_obj.close()
+
+            # get shebang from content of the script
+            shebang = run.job.script_content.split('\n', 1)[0]
+            executable = shebang.replace('#!', '').split()
+            executable.append(file_path)
+
+            logger.info('Starting run {0}'.format(run.resource_uri))
+
             run.patch({'start_dts': datetime.now(utc).isoformat(' ')})
 
             sub_proc = subprocess.Popen(
@@ -79,7 +84,7 @@ def execute_run(run_queue, event_queue, exit_queue):
             run.patch({'pid': sub_proc.pid})
             did_run = True
             out, err = sub_proc.communicate()
-        except OSError as e:
+        except Exception as e:
             out = 'Could not execute job: ' + str(e)
             event_queue.put(json.dumps(
                 {'event': 'started', 'run_id': run.id, 'kind': 'run'}))
