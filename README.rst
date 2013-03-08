@@ -4,6 +4,12 @@ Job-Runner Worker
 This package contains the Job-Runner Worker, which is responsible for executing
 the scheduled jobs managed by the Job-Runner.
 
+Links
+-----
+
+* `documentation <https://job-runner.readthedocs.org/>`_
+* `source <https://github.com/spilgames/job-runner-worker/>`_
+
 
 Installation
 ------------
