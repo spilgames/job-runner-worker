@@ -6,10 +6,11 @@ import job_runner_worker
 setup(
     name='job-runner-worker',
     version=job_runner_worker.__version__,
-    url='https://github.com/spilgames/dwh/',
+    url='https://github.com/spilgames/job-runner-worker/',
     author='Orne Brocaar',
     author_email='datawarehouse@spilgames.com',
     description='Job-Runner Worker',
+    license='BSD',
     long_description=open('README.rst').read(),
     packages=[
         'job_runner_worker',
