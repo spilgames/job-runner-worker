@@ -180,10 +180,7 @@ class ModuleTestCase(unittest.TestCase):
         _handle_ping_action(Mock())
 
         Worker.get_list.assert_called_once_with(
-            'job_runner_worker.worker_resource_uri',
-            params={
-                'api_key': 'job_runner_worker.api_key'
-            }
+            'job_runner_worker.worker_resource_uri'
         )
 
         dts = datetime.now.return_value.isoformat.return_value

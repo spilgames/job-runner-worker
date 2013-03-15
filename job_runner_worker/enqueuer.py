@@ -165,10 +165,7 @@ def _handle_ping_action(message):
     Handle the ``'ping'`` action.
     """
     worker_list = Worker.get_list(
-        config.get('job_runner_worker', 'worker_resource_uri'),
-        params={
-            'api_key': config.get('job_runner_worker', 'api_key')
-        }
+        config.get('job_runner_worker', 'worker_resource_uri')
     )
 
     if len(worker_list) == 1:
