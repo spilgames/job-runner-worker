@@ -119,11 +119,19 @@ For starting the worker, you can use the ``job_runner_worker`` command::
 Changes
 -------
 
+v2.0.0
+~~~~~~
+
+* Make the worker compatible with the new worker-pool structure.
+  **IMPORTANT:** This version is dependent on ``job-runner>=2.0.0``!
+
+
 v1.2.1
 ~~~~~~
 
 * Make the worker crash early instead of hanging on errors happening before the
   actual job starts, to give the user a visible cue that something went wrong.
+
 
 v1.2.0
 ~~~~~~
