@@ -105,10 +105,14 @@ class ModuleTestCase(unittest.TestCase):
     @patch('job_runner_worker.enqueuer.config')
     @patch('job_runner_worker.enqueuer.datetime')
     @patch('job_runner_worker.enqueuer.Run')
-    def test__handle_enqueue_action(self, Run, datetime, config):
+    @patch('job_runner_worker.enqueuer.Worker')
+    def test__handle_enqueue_action(self, Worker, Run, datetime, config):
         """
         Test :func:`._handle_enqueue_action`.
         """
+        worker = Mock()
+        Worker.get_list.return_value = [worker]
+
         run_queue = Mock()
         event_queue = Mock()
 
@@ -125,7 +129,8 @@ class ModuleTestCase(unittest.TestCase):
         _handle_enqueue_action(message, run_queue, event_queue)
 
         run.patch.assert_called_once_with({
-            'enqueue_dts': datetime.now.return_value.isoformat.return_value
+            'enqueue_dts': datetime.now.return_value.isoformat.return_value,
+            'worker': worker.resource_uri
         })
         run_queue.put.assert_called_once_with(run)
         event_queue.put.assert_called_once_with(
