@@ -119,6 +119,12 @@ For starting the worker, you can use the ``job_runner_worker`` command::
 Changes
 -------
 
+v1.2.1
+~~~~~~
+
+* Make the worker crash early instead of hanging on errors happening before the
+  actual job starts, to give the user a visible cue that something went wrong.
+
 v1.2.0
 ~~~~~~
 
