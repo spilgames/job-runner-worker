@@ -111,6 +111,12 @@ class BaseRestModel(object):
 
         return response.json
 
+    def reload(self):
+        """
+        Reload the model.
+        """
+        self._data = self._get_json_data()
+
     @retry_on_requests_error
     def patch(self, attributes={}):
         """
@@ -244,6 +250,13 @@ class Run(BaseRestModel):
     @property
     def job(self):
         return Job(self.__getattr__('job'))
+
+    @property
+    def run_log(self):
+        uri = self.__getattr__('run_log')
+        if uri:
+            return RunLog(uri)
+        return None
 
 
 class RunLog(BaseRestModel):

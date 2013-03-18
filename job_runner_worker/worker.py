@@ -92,15 +92,25 @@ def execute_run(run_queue, event_queue, exit_queue):
         log_output = _truncate_log(out)
 
         logger.info('Run {0} ended'.format(run.resource_uri))
-        run_log = RunLog(
-            config.get('job_runner_worker', 'run_log_resource_uri'))
-        run_log.post({
-            'run': '{0}{1}/'.format(
-                config.get('job_runner_worker', 'run_resource_uri'),
-                run.id
-            ),
-            'content': log_output
-        })
+        run.reload()
+        run_log = run.run_log
+
+        if run_log:
+            # handles the rare case when a job alread has a log, but was
+            # restarted (because the return_dts was never set)
+            run_log.patch({
+                'content': log_output,
+            })
+        else:
+            run_log = RunLog(
+                config.get('job_runner_worker', 'run_log_resource_uri'))
+            run_log.post({
+                'run': '{0}{1}/'.format(
+                    config.get('job_runner_worker', 'run_resource_uri'),
+                    run.id
+                ),
+                'content': log_output
+            })
         run.patch({
             'return_dts': datetime.now(utc).isoformat(' '),
             'return_success':
