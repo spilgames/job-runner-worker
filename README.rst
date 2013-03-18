@@ -129,6 +129,8 @@ v2.0.0
   **IMPORTANT:** This version is dependent on ``job-runner>=2.0.0``!
 * Change ``SETTINGS_PATH`` environment variable to ``CONFIG_PATH`` for better
   naming consistency.
+* Make sure that when a run already has log, it is updated (before it would
+  hang on the database integrity error).
 
 
 v1.2.1
