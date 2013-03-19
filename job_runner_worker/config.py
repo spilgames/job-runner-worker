@@ -7,7 +7,7 @@ def get_config_parser():
     """
     Return ``ConfigParser`` instance and load config file.
 
-    This will load the settings as specified in the ``SETTINGS_PATH``
+    This will load the settings as specified in the ``CONFIG_PATH``
     environment variable.
 
     :return:
@@ -26,7 +26,7 @@ def get_config_parser():
         'broadcaster_server_port': '5556',
         'reconnect_after_inactivity': str(60 * 10),
     })
-    config.read(os.environ['SETTINGS_PATH'])
+    config.read(os.environ['CONFIG_PATH'])
     return config
 
 

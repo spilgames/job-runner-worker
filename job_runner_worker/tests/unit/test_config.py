@@ -15,7 +15,7 @@ class ModuleTestCase(unittest.TestCase):
         """
         Test :py:func:`.get_config_parser`.
         """
-        os.environ = {'SETTINGS_PATH': '/path/to/settings'}
+        os.environ = {'CONFIG_PATH': '/path/to/settings'}
 
         config_mock = Mock()
         ConfigParser.ConfigParser.return_value = config_mock

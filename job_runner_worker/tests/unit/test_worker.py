@@ -25,6 +25,7 @@ class ModuleTestCase(unittest.TestCase):
         config.get.return_value = '/tmp'
 
         run = Mock()
+        run.run_log = None
         run.id = 1234
         run.job.script_content = (
             u'#!/usr/bin/env bash\n\necho "H\xe9llo World!";\n')
@@ -65,6 +66,55 @@ class ModuleTestCase(unittest.TestCase):
         datetime.now.assert_called_with(utc)
 
     @patch('job_runner_worker.worker.subprocess', subprocess)
+    @patch('job_runner_worker.worker.datetime')
+    @patch('job_runner_worker.worker.config')
+    def test_execute_run_with_log(self, config, datetime):
+        """
+        Test :func:`.execute_run` with existing log.
+        """
+        config.get.return_value = '/tmp'
+
+        run = Mock()
+        run.id = 1234
+        run.job.script_content = (
+            u'#!/usr/bin/env bash\n\necho "H\xe9llo World!";\n')
+
+        event_queue = Mock()
+        exit_queue = Mock()
+        run_queue = Queue()
+        run_queue.put(run)
+
+        exit_queue_return = [Empty, None]
+
+        def exit_queue_side_effect(*args, **kwargs):
+            value = exit_queue_return.pop(0)
+            if callable(value):
+                raise value()
+
+        exit_queue.get.side_effect = exit_queue_side_effect
+
+        execute_run(run_queue, event_queue, exit_queue)
+
+        dts = datetime.now.return_value.isoformat.return_value
+        self.assertTrue('pid' in run.patch.call_args_list[1][0][0])
+        self.assertEqual(dts, run.patch.call_args_list[0][0][0]['start_dts'])
+        self.assertEqual(
+            u'H\xe9llo World!\n'.encode('utf-8'),
+            run.run_log.patch.call_args_list[0][0][0]['content']
+        )
+        self.assertEqual([
+            call({
+                'return_dts': dts,
+                'return_success': True,
+            })
+        ], run.patch.call_args_list[2:])
+        self.assertEqual([
+            call('{"kind": "run", "event": "started", "run_id": 1234}'),
+            call('{"kind": "run", "event": "returned", "run_id": 1234}'),
+        ], event_queue.put.call_args_list)
+        datetime.now.assert_called_with(utc)
+
+    @patch('job_runner_worker.worker.subprocess', subprocess)
     @patch('job_runner_worker.worker.RunLog')
     @patch('job_runner_worker.worker.datetime')
     @patch('job_runner_worker.worker.config')
@@ -75,6 +125,7 @@ class ModuleTestCase(unittest.TestCase):
         config.get.return_value = '/tmp'
 
         run = Mock()
+        run.run_log = None
         run.id = 1234
         run.job.script_content = (
             u'#!I love cheese\n\necho "H\xe9llo World!";\n')

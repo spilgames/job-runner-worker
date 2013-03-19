@@ -122,13 +122,22 @@ def _handle_enqueue_action(message, run_queue, event_queue):
         message['run_id']
     ))
 
+    worker_list = Worker.get_list(
+        config.get('job_runner_worker', 'worker_resource_uri')
+    )
+
     if run.enqueue_dts:
         logger.warning(
             'Was expecting that run: {0} was not in queue yet'.format(
                 run.id))
+    elif len(worker_list) != 1:
+        logger.warning('API returned multiple workers, expected one')
     else:
         run.patch({
-            'enqueue_dts': datetime.now(utc).isoformat(' ')
+            'enqueue_dts': datetime.now(utc).isoformat(' '),
+            # set the worker so we know which worker of the pool claimed the
+            # run
+            'worker': worker_list[0].resource_uri,
         })
         run_queue.put(run)
         event_queue.put(json.dumps(
@@ -165,10 +174,7 @@ def _handle_ping_action(message):
     Handle the ``'ping'`` action.
     """
     worker_list = Worker.get_list(
-        config.get('job_runner_worker', 'worker_resource_uri'),
-        params={
-            'api_key': config.get('job_runner_worker', 'api_key')
-        }
+        config.get('job_runner_worker', 'worker_resource_uri')
     )
 
     if len(worker_list) == 1:
@@ -176,4 +182,4 @@ def _handle_ping_action(message):
             'ping_response_dts': datetime.now(utc).isoformat(' '),
         })
     else:
-        logger.warning('Workers by api_key query resulted in multiple results')
+        logger.warning('API returned multiple workers, expected one')

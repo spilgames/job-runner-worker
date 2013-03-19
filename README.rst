@@ -20,8 +20,11 @@ Requirements (depending on your distro, the naming might be a bit different):
 * ``build-essential``
 * ``libevent-dev``
 
-Then install this package by executing ``python setup.py install`` or
-``python setup.py develop`` (for development). In the latter, you might want
+Then you should be able to install this package with
+``pip install job-runner-worker``.
+
+If you want to install this package in development mode, clone this repository
+and then execute ``python setup.py develop``. In the latter, you might want
 to install the testing requirements by executing
 ``pip install -r test-requirements.txt``.
 
@@ -107,23 +110,35 @@ For starting the worker, you can use the ``job_runner_worker`` command::
 
     usage: job_runner_worker [-h] [--config-path CONFIG_PATH]
 
-    Job Runner worker
+    Job Runner worker (v2.0.0)
 
     optional arguments:
       -h, --help            show this help message and exit
       --config-path CONFIG_PATH
-                            absolute path to config file (default: SETTINGS_PATH
-                            env variable)
+                            absolute path to config file (default: CONFIG_PATH env
+                            variable)
 
 
 Changes
 -------
+
+v2.0.0
+~~~~~~
+
+* Make the worker compatible with the new worker-pool structure.
+  **IMPORTANT:** This version is dependent on ``job-runner>=2.0.0``!
+* Change ``SETTINGS_PATH`` environment variable to ``CONFIG_PATH`` for better
+  naming consistency.
+* Make sure that when a run already has log, it is updated (before it would
+  hang on the database integrity error).
+
 
 v1.2.1
 ~~~~~~
 
 * Make the worker crash early instead of hanging on errors happening before the
   actual job starts, to give the user a visible cue that something went wrong.
+
 
 v1.2.0
 ~~~~~~

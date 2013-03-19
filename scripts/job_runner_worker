@@ -5,21 +5,28 @@ from gevent import monkey; monkey.patch_all()
 import argparse
 import os
 
-parser = argparse.ArgumentParser(description='Job Runner worker')
+import job_runner_worker
+
+
+parser = argparse.ArgumentParser(
+    description='Job Runner worker (v{0})'.format(
+        job_runner_worker.__version__
+    )
+)
 
 parser.add_argument(
     '--config-path',
     dest='config_path',
     type=str,
     default=None,
-    help='absolute path to config file (default: SETTINGS_PATH env variable)',
+    help='absolute path to config file (default: CONFIG_PATH env variable)',
 )
 
 if __name__ == '__main__':
     arg_obj = parser.parse_args()
 
     if arg_obj.config_path:
-        os.environ['SETTINGS_PATH'] = arg_obj.config_path
+        os.environ['CONFIG_PATH'] = arg_obj.config_path
 
     from job_runner_worker.config import config, setup_log_handler
     from job_runner_worker.runner import run
