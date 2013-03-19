@@ -110,7 +110,7 @@ For starting the worker, you can use the ``job_runner_worker`` command::
 
     usage: job_runner_worker [-h] [--config-path CONFIG_PATH]
 
-    Job Runner wormake teker (v2.0.0)
+    Job Runner worker (v2.0.0)
 
     optional arguments:
       -h, --help            show this help message and exit
