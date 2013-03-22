@@ -25,6 +25,7 @@ def get_config_parser():
         'ws_server_port': '5555',
         'broadcaster_server_port': '5556',
         'reconnect_after_inactivity': str(60 * 10),
+        'script_temp_path': '/tmp',
     })
     config.read(os.environ['CONFIG_PATH'])
     return config

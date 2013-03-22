@@ -85,8 +85,7 @@ All available settings
 
 ``script_temp_path``
     The path where the scripts that are being executed through the Job-Runner
-    are temporarily stored. Note that this should be a location where
-    executable scripts are allowed!
+    are temporarily stored. Default: ``'/tmp'``.
 
 ``broadcaster_server_hostname``
     The hostname of the queue broadcaster server.

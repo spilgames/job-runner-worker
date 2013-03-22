@@ -54,6 +54,8 @@ def execute_run(run_queue, event_queue, exit_queue):
         # From a user POV, a job not run is a failure.
         # Hence the catchall try.
         did_run = False
+        file_path = None
+
         try:
             file_desc, file_path = tempfile.mkstemp(
                 dir=config.get('job_runner_worker', 'script_temp_path')
@@ -85,6 +87,7 @@ def execute_run(run_queue, event_queue, exit_queue):
             did_run = True
             out, err = sub_proc.communicate()
         except Exception as e:
+            logger.exception('The run failed to complete because of an error')
             out = 'Could not execute job: ' + str(e)
             event_queue.put(json.dumps(
                 {'event': 'started', 'run_id': run.id, 'kind': 'run'}))
@@ -118,7 +121,9 @@ def execute_run(run_queue, event_queue, exit_queue):
         })
         event_queue.put(json.dumps(
             {'event': 'returned', 'run_id': run.id, 'kind': 'run'}))
-        os.remove(file_path)
+
+        if file_path:
+            os.remove(file_path)
 
 
 def kill_run(kill_queue, event_queue, exit_queue):
