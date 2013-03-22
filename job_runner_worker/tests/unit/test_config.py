@@ -33,6 +33,7 @@ class ModuleTestCase(unittest.TestCase):
             'ws_server_port': '5555',
             'broadcaster_server_port': '5556',
             'reconnect_after_inactivity': str(60 * 10),
+            'script_temp_path': '/tmp',
         })
         config_mock.read.assert_called_once_with('/path/to/settings')
         self.assertEqual(config_mock, config)
