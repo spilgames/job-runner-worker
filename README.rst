@@ -121,6 +121,13 @@ For starting the worker, you can use the ``job_runner_worker`` command::
 Changes
 -------
 
+v2.0.1
+~~~~~~
+
+* Make sure to only cleanup runs that are assigned to the worker. This version
+  is dependent on ``job-runner>=3.0.1``.
+
+
 v2.0.0
 ~~~~~~
 

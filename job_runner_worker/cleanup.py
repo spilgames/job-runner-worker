@@ -24,6 +24,7 @@ def reset_incomplete_runs():
             config.get('job_runner_worker', 'run_resource_uri'),
             params={
                 'state': state,
+                'worker__api_key': config.get('job_runner_worker', 'api_key'),
             }
         ))
 
