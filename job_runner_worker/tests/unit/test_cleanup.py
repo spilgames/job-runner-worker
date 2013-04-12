@@ -17,7 +17,8 @@ class ModuleTestCase(unittest.TestCase):
         """
         def config_side_effect(*args):
             return {
-                ('job_runner_worker', 'run_resource_uri'): '/api/run/'
+                ('job_runner_worker', 'run_resource_uri'): '/api/run/',
+                ('job_runner_worker', 'api_key'): 'test_api_key',
             }[args]
 
         config.get.side_effect = config_side_effect
@@ -29,8 +30,14 @@ class ModuleTestCase(unittest.TestCase):
         reset_incomplete_runs()
 
         self.assertEqual([
-            call('/api/run/', params={'state': 'in_queue'}),
-            call('/api/run/', params={'state': 'started'}),
+            call('/api/run/', params={
+                'state': 'in_queue',
+                'worker__api_key': 'test_api_key',
+            }),
+            call('/api/run/', params={
+                'state': 'started',
+                'worker__api_key': 'test_api_key',
+            }),
         ], Run.get_list.call_args_list)
 
         incomplete_run.patch.assert_called_once_with({
