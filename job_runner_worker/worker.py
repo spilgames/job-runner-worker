@@ -56,6 +56,11 @@ def execute_run(run_queue, event_queue, exit_queue):
         did_run = False
         file_path = None
 
+        logger.info('Starting run {0}'.format(run.resource_uri))
+        run.patch({'start_dts': datetime.now(utc).isoformat(' ')})
+        event_queue.put(json.dumps(
+            {'event': 'started', 'run_id': run.id, 'kind': 'run'}))
+
         try:
             file_desc, file_path = tempfile.mkstemp(
                 dir=config.get('job_runner_worker', 'script_temp_path')
@@ -73,15 +78,8 @@ def execute_run(run_queue, event_queue, exit_queue):
             executable = shebang.replace('#!', '').split()
             executable.append(file_path)
 
-            logger.info('Starting run {0}'.format(run.resource_uri))
-
-            run.patch({'start_dts': datetime.now(utc).isoformat(' ')})
-
             sub_proc = subprocess.Popen(
                 executable, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-
-            event_queue.put(json.dumps(
-                {'event': 'started', 'run_id': run.id, 'kind': 'run'}))
 
             run.patch({'pid': sub_proc.pid})
             did_run = True
@@ -89,8 +87,6 @@ def execute_run(run_queue, event_queue, exit_queue):
         except Exception as e:
             logger.exception('The run failed to complete because of an error')
             out = 'Could not execute job: ' + str(e)
-            event_queue.put(json.dumps(
-                {'event': 'started', 'run_id': run.id, 'kind': 'run'}))
 
         log_output = _truncate_log(out)
 
