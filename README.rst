@@ -121,6 +121,13 @@ For starting the worker, you can use the ``job_runner_worker`` command::
 Changes
 -------
 
+v2.0.2
+~~~~~~
+
+* Fix the case where in case of an exception, the run was marked as completed
+  but not started.
+
+
 v2.0.1
 ~~~~~~
 
