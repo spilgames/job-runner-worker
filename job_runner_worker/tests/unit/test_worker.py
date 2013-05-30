@@ -151,7 +151,7 @@ class ModuleTestCase(unittest.TestCase):
         self.assertEqual(dts, run.patch.call_args_list[0][0][0]['start_dts'])
         log_out = RunLog.return_value.post.call_args_list[0][0][0]['content']
         self.assertTrue(
-            log_out.startswith('Could not execute job')
+            log_out.startswith('[job runner worker] Could not execute job:')
         )
         self.assertEqual([
             call({

@@ -4,6 +4,7 @@ import logging
 import os
 import signal
 import tempfile
+import traceback
 import time
 from datetime import datetime
 
@@ -86,7 +87,8 @@ def execute_run(run_queue, event_queue, exit_queue):
             out, err = sub_proc.communicate()
         except Exception as e:
             logger.exception('The run failed to complete because of an error')
-            out = 'Could not execute job: ' + str(e)
+            out = ('[job runner worker] Could not execute job: ' +
+                   traceback.format_exc(e))
 
         log_output = _truncate_log(out)
 
