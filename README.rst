@@ -121,6 +121,11 @@ For starting the worker, you can use the ``job_runner_worker`` command::
 Changes
 -------
 
+v2.0.3
+~~~~~~
+
+* Update error message when job does not start to be more verbose and specific.
+
 v2.0.2
 ~~~~~~
 
