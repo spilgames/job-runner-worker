@@ -8,6 +8,7 @@ import zmq.green as zmq
 from gevent.queue import Empty
 from pytz import utc
 
+import job_runner_worker
 from job_runner_worker.config import config
 from job_runner_worker.models import KillRequest, Run, Worker
 
@@ -180,6 +181,9 @@ def _handle_ping_action(message):
     if len(worker_list) == 1:
         worker_list[0].patch({
             'ping_response_dts': datetime.now(utc).isoformat(' '),
+            'worker_version': job_runner_worker.__version__,
+            'concurrent_jobs': config.getint(
+                'job_runner_worker', 'concurrent_jobs')
         })
     else:
         logger.warning('API returned multiple workers, expected one')

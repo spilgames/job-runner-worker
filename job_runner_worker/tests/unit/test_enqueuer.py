@@ -5,6 +5,7 @@ from gevent.queue import Queue
 from mock import Mock, patch
 from pytz import utc
 
+import job_runner_worker
 from job_runner_worker.enqueuer import (
     _handle_enqueue_action,
     _handle_kill_action,
@@ -178,6 +179,7 @@ class ModuleTestCase(unittest.TestCase):
         Test func:`._handle_ping_action`.
         """
         config.get.side_effect = lambda *args: '.'.join(args)
+        config.getint.return_value = 4
 
         worker = Mock()
         Worker.get_list.return_value = [worker]
@@ -190,5 +192,7 @@ class ModuleTestCase(unittest.TestCase):
 
         dts = datetime.now.return_value.isoformat.return_value
         worker.patch.assert_called_once_with({
-            'ping_response_dts': dts
+            'ping_response_dts': dts,
+            'worker_version': job_runner_worker.__version__,
+            'concurrent_jobs': 4,
         })
