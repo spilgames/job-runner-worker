@@ -109,7 +109,7 @@ For starting the worker, you can use the ``job_runner_worker`` command::
 
     usage: job_runner_worker [-h] [--config-path CONFIG_PATH]
 
-    Job Runner worker (v2.0.0)
+    Job Runner worker (v2.1.0)
 
     optional arguments:
       -h, --help            show this help message and exit
@@ -121,10 +121,19 @@ For starting the worker, you can use the ``job_runner_worker`` command::
 Changes
 -------
 
+v2.1.0
+~~~~~~
+
+* On ping response, send back the version of the worker and the number of
+  concurrent jobs. This version requires that you have ``job-runner>=3.4.0``
+  running.
+
+
 v2.0.3
 ~~~~~~
 
 * Update error message when job does not start to be more verbose and specific.
+
 
 v2.0.2
 ~~~~~~
