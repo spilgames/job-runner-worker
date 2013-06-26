@@ -165,6 +165,57 @@ class ModuleTestCase(unittest.TestCase):
         ], event_queue.put.call_args_list)
         datetime.now.assert_called_with(utc)
 
+    @patch('job_runner_worker.worker.subprocess', subprocess)
+    @patch('job_runner_worker.worker.RunLog')
+    @patch('job_runner_worker.worker.datetime')
+    @patch('job_runner_worker.worker.config')
+    def test_execute_no_shebang(self, config, datetime, RunLog):
+        """
+        Test :func:`.execute_run` when the shebang is invalid.
+        """
+        config.get.return_value = '/tmp'
+
+        run = Mock()
+        run.run_log = None
+        run.id = 1234
+        run.job.script_content = (
+            u'I love cheese\n\necho "H\xe9llo World!";\n')
+
+        event_queue = Mock()
+        exit_queue = Mock()
+        run_queue = Queue()
+        run_queue.put(run)
+
+        exit_queue_return = [Empty, None]
+
+        def exit_queue_side_effect(*args, **kwargs):
+            value = exit_queue_return.pop(0)
+            if callable(value):
+                raise value()
+
+        exit_queue.get.side_effect = exit_queue_side_effect
+
+        execute_run(run_queue, event_queue, exit_queue)
+
+        dts = datetime.now.return_value.isoformat.return_value
+
+        self.assertEqual(dts, run.patch.call_args_list[0][0][0]['start_dts'])
+        log_out = RunLog.return_value.post.call_args_list[0][0][0]['content']
+        self.assertTrue(
+            log_out.startswith('[job runner worker] Could not execute job:')
+        )
+        self.assertEqual([
+            call({
+                'return_dts': dts,
+                'return_success': False,
+            })
+        ], run.patch.call_args_list[1:])
+        self.assertEqual([
+            call('{"kind": "run", "event": "started", "run_id": 1234}'),
+            call('{"kind": "run", "event": "returned", "run_id": 1234}'),
+        ], event_queue.put.call_args_list)
+        datetime.now.assert_called_with(utc)
+
     @patch('job_runner_worker.worker._kill_pid_tree')
     @patch('job_runner_worker.worker.datetime')
     def test_kill_run(self, datetime, kill_pid_tree_mock):
