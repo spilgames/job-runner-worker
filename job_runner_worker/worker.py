@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import signal
+import shlex
 import tempfile
 import traceback
 import time
@@ -81,11 +82,13 @@ def execute_run(run_queue, event_queue, exit_queue):
                     'The first line of the job to run needs to '
                     'start with a shebang (#!). The current first line is: "'
                     '{0}"'.format(shebang))
-            executable = shebang.replace('#!', '').split()
-            executable.append(file_path)
+            executable = "{0} {1}".format(shebang.replace('#!', ''), file_path)
 
             sub_proc = subprocess.Popen(
-                executable, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                shlex.split(executable),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT
+            )
 
             run.patch({'pid': sub_proc.pid})
             did_run = True
