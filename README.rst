@@ -126,6 +126,9 @@ v2.1.1
 
 * Make sure a shebang does exist on scripts to be run. Use shlex to make
   Popen safer.
+* Retry request 5x when the response is in the 4xx range before raising an
+  exception.
+
 
 v2.1.0
 ~~~~~~
