@@ -77,7 +77,7 @@ def execute_run(run_queue, event_queue, exit_queue):
 
             # get shebang from content of the script
             shebang = run.job.script_content.split('\n', 1)[0]
-            if '#!' not in shebang:
+            if not shebang.startswith('#!'):
                 raise Exception(
                     'The first line of the job to run needs to '
                     'start with a shebang (#!). The current first line is: "'
