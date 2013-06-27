@@ -94,6 +94,7 @@ class BaseRestModelTestCase(unittest.TestCase):
             verify=False,
         )
 
+    @patch('job_runner_worker.models.time', Mock())
     @patch('job_runner_worker.models.HmacAuth')
     @patch('job_runner_worker.models.config')
     @patch('job_runner_worker.models.requests')
@@ -115,6 +116,7 @@ class BaseRestModelTestCase(unittest.TestCase):
         base_model = BaseRestModel('/path/to/resource')
         self.assertRaises(RequestClientError, base_model.patch, {'foo': 'bar'})
 
+    @patch('job_runner_worker.models.time', Mock())
     @patch('job_runner_worker.models.HmacAuth')
     @patch('job_runner_worker.models.config')
     @patch('job_runner_worker.models.requests')
@@ -167,6 +169,7 @@ class BaseRestModelTestCase(unittest.TestCase):
 
         HmacAuth.assert_called_once_with('public', 'key')
 
+    @patch('job_runner_worker.models.time', Mock())
     @patch('job_runner_worker.models.HmacAuth')
     @patch('job_runner_worker.models.config')
     @patch('job_runner_worker.models.requests')
@@ -221,6 +224,7 @@ class BaseRestModelTestCase(unittest.TestCase):
         self.assertEqual({'id': 1, 'resource_uri': 'foo'}, out[0]._data)
         self.assertEqual({'id': 2, 'resource_uri': 'bar'}, out[1]._data)
 
+    @patch('job_runner_worker.models.time', Mock())
     @patch('job_runner_worker.models.HmacAuth')
     @patch('job_runner_worker.models.config')
     @patch('job_runner_worker.models.requests')

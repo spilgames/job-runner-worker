@@ -121,6 +121,13 @@ For starting the worker, you can use the ``job_runner_worker`` command::
 Changes
 -------
 
+v2.1.1
+~~~~~~
+
+* Retry request 5x when the response is in the 4xx range before raising an
+  exception.
+
+
 v2.1.0
 ~~~~~~
 
