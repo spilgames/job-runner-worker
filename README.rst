@@ -121,6 +121,12 @@ For starting the worker, you can use the ``job_runner_worker`` command::
 Changes
 -------
 
+v2.1.1
+~~~~~~
+
+* Make sure a shebang does exist on scripts to be run. Use shlex to make
+  Popen safer.
+
 v2.1.0
 ~~~~~~
 
