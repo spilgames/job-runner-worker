@@ -41,27 +41,14 @@ def retry_on_requests_error(func):
                 return func(*args, **kwargs)
             except (RequestException, RequestServerError):
                 logger.exception(
-                    'Exception raised while calling {0} '
-                    'with arguments {1} '.format(
-                        func.__name__, kwargs))
+                    'Exception raised while calling {0}'.format(
+                        func.__name__))
                 if attempt <= 10:
                     time.sleep(2)
                 elif attempt <= 50:
                     time.sleep(5)
                 else:
                     time.sleep(10)
-            except RequestClientError:
-                # RequestClientError should theoretically not be recoverable
-                # but we'll try max 5 times anyways.
-
-                if attempt >= 5:
-                    raise
-
-                logger.exception(
-                    'Exception raised while calling {0} '
-                    'with arguments {1} '.format(
-                        func.__name__, kwargs))
-                time.sleep(attempt * 10)
 
     return inner_func
 
