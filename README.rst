@@ -121,6 +121,16 @@ For starting the worker, you can use the ``job_runner_worker`` command::
 Changes
 -------
 
+v2.1.2
+~~~~~~
+
+* Rollback retry on 4xx errors. Instead, recover when an unexpected error
+  occurs in the ``execute_run``, ``enqueue_actions``, or ``kill_run``. This
+  will recover from when a run was claimed by two workers (e.g. in the case
+  when it was sent to worker a, which doesn't respond directly, then it was
+  sent to worker b which claims it after which a claims it too).
+
+
 v2.1.1
 ~~~~~~
 
