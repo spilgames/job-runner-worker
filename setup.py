@@ -8,7 +8,7 @@ setup(
     version=job_runner_worker.__version__,
     url='https://github.com/spilgames/job-runner-worker/',
     author='Orne Brocaar',
-    author_email='datawarehouse@spilgames.com',
+    author_email='dwh-eng@spilgames.com',
     description='Job-Runner Worker',
     license='BSD',
     long_description=open('README.rst').read(),

@@ -132,6 +132,10 @@ class BaseRestModel(object):
             :exc:`.RequestClientError` on errors caused client-side.
 
         """
+        logger.debug('PATCHing {0}: {1}'.format(
+            self._resource_path,
+            json.dumps(attributes))
+        )
         response = requests.patch(
             urlparse.urljoin(
                 config.get('job_runner_worker', 'api_base_url'),
@@ -169,6 +173,10 @@ class BaseRestModel(object):
             :exc:`.RequestClientError` on errors caused client-side.
 
         """
+        logger.debug('POSTing {0}: {1}'.format(
+            self._resource_path,
+            json.dumps(attributes))
+        )
         response = requests.post(
             urlparse.urljoin(
                 config.get('job_runner_worker', 'api_base_url'),
