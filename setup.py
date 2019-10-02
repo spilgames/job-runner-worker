@@ -22,7 +22,7 @@ setup(
         'argparse',
         'gevent',
         'gevent_subprocess',
-        'requests==0.14.2',
+        'requests==2.20.0',
         'pytz',
         'pyzmq',
     ]
